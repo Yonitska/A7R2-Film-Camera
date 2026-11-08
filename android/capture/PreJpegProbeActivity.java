@@ -171,7 +171,7 @@ public class PreJpegProbeActivity extends Activity implements SurfaceHolder.Call
     // 42 MP JPEGs can take longer to appear on a busy card. The scan now waits
     // up to 15 s (still inside the 20 s recovery window); the live write chip
     // makes this wait visible without the old darkroom page.
-    private static final long RECIPE_SCAN_TOTAL_MS=30000L;
+    private static final long RECIPE_SCAN_TOTAL_MS=15000L;
     private static final long RECIPE_SCAN_STABLE_MS=400L;
     // DCIM JPEGs present before the shot. Without a store callback the scan
     // must distinguish our new file by name, not only by the card's mtime
@@ -1675,11 +1675,12 @@ public class PreJpegProbeActivity extends Activity implements SurfaceHolder.Call
      * from the pre-shot baseline, keep a stable size for one beat (the camera
      * may still be appending entropy data), and carry a valid JPEG header. */
     private void scanRecipeStore(final long shot,final long startedAt){
-        // a7r2.58: keep scanning after the UI watchdog has returned the finder
-        // to READY. A late 42MP camera JPEG is still catalogued (verifyRecipeStore
-        // has a late-store path) instead of being lost when the write is slow.
-        if(closed||gate.shot()!=shot)return;
-        if(gate.state()!=PreJpegGate.State.ARMED&&gate.state()!=PreJpegGate.State.READY)return;
+        // a7r2.59: never keep the capture session alive after the UI watchdog
+        // has returned the gate to READY. The recipe Activity still owns
+        // CameraEx; continuing the scan for 30 s made a mode switch open the
+        // movie session while the still camera was still held, wedging AF and
+        // later captures. A late file is handled by a later session/retry.
+        if(closed||gate.shot()!=shot||gate.state()!=PreJpegGate.State.ARMED)return;
         stage("store_scan_begin");
         final File found=findRecipeStoreCandidate();
         if(found==null){

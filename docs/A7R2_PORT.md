@@ -1695,6 +1695,20 @@ assumptions could hide a real file: the 15 s window and the exact
   `recipe_store_size_mismatch`; a file in DCIM proves the scan/receipt path
   is at fault, while no file means the camera ignored `takePicture`.
 
+### a7r2.59 Stop the recipe scan from holding CameraEx across a mode switch
+
+a7r2.58 extended the recipe DCIM scan to 30 s and kept it running after the UI
+watchdog returned the gate to READY. The recipe Activity still owns CameraEx
+during that window, so switching to the movie Activity could open the camera
+while the still session was still active; the reported result was AF stuck,
+then no capture in later modes. a7r2.59 restores the a7r2.57 boundary: the scan
+runs only while the gate is ARMED, and the total window is 15 s. A timeout,
+back, or mode switch stops queued retries so `close()` releases CameraEx before
+video starts. The `jpegSize()`/size-mismatch diagnostics remain. Artifacts:
+`dist/SonyLutTest.apk`, 6,651,674 B, SHA-256
+`36a0a358aa4b1ad824cdb2f8839698e2ef4d93e6468582e173223d2406d064bc`,
+version `0.9.0-beta.5-a7r2.59` / code 155.
+
 ## Main risks
 
 - Sony `CameraSequence`/`DefaultDevelopFilter` and the 42m map are private
