@@ -6,10 +6,11 @@ network is needed to take a photo. The app applies a full 3D LUT to 42 MP RAW
 captures, offers a camera-native "film recipe" mode, records video, and replaces
 the usual Sony interface with a film-shelf / darkroom UI.
 
-> **Status: beta, unfinished, and not affiliated with Sony.** The current build
-> is `0.9.0-beta.5-a7r2.53`, signed with a local test key and tested only on an
-> ILCE-7RM2 running firmware 4.01. It is not a polished product. Read
-> [Known issues](#known-issues) before installing it.
+> **Status: beta, unfinished, and not affiliated with Sony.** The current source
+> version is `0.9.0-beta.5-a7r2.53`; local builds use a test key. The port has
+> only ever been tested on an ILCE-7RM2 running firmware 4.01, and hardware
+> validation of the latest build is still in progress. It is not a polished
+> product. Read [Known issues](#known-issues) before installing it.
 
 The Android package is `org.hongen.sonylutprobe`; the on-camera display name is
 **A7R2胶片相机**. This repository is the source tree for the A7R II port.
