@@ -24,6 +24,12 @@ public final class LibraryActivity extends Activity {
     private final PreviewRequest previewRequests=new PreviewRequest();
     private String mode="loading",previous="library",notice="",previewId="",importFocusId,scanPath="";private StringBuilder scanReport;private int selection,lastSelection;private boolean busy,destroyed,importDone;private int photoReturnToken;
     private boolean displayStarted,exiting;private String selectedId;private int beautySkin,beautyDenoise;
+    // OpenMemories Tweak Developer/Info (MIT). All native shell calls run on
+    // the single io executor, never the UI thread.
+    private TweakTools tweakTools;private TweakTools.Status debugStatus;private boolean debugStatusLoading,debugWifiArmed;
+    private final Runnable debugPoll=new Runnable(){public void run(){
+        if(!destroyed&&mode.equals("debug")){loadDebugStatus();ui.postDelayed(this,1000);}
+    }};
     private String shootMode="lut";private int recipeGroup,recipeLocal,lastRecipeId=-1;
     private Bitmap[] recipeImages;private boolean recipeImagesLoading;
     private long captureLaunchAt;private int capturePrepareToken;
@@ -64,6 +70,7 @@ public final class LibraryActivity extends Activity {
         lastRecipeId=RecipeData.recipeAt(recipeGroup,recipeLocal);
         beautySkin=getPreferences(0).getInt("beauty_skin",0);
         beautyDenoise=getPreferences(0).getInt("beauty_denoise",0);
+        debugWifiArmed=getPreferences(0).getBoolean("debug_wifi_armed",false);
         page.tap=new CameraPage.Tap(){public void select(int row){selection=row;render();action();}};
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);initializeLibrary();
     }
@@ -181,7 +188,7 @@ public final class LibraryActivity extends Activity {
     private static int depthOf(String mode){
         if(isHome(mode))return 0;
         if(mode.equals("import")||mode.equals("gallery")||mode.equals("options")||mode.equals("about")
-                ||mode.equals("shoot_mode")||mode.equals("transfer"))return 1;
+                ||mode.equals("shoot_mode")||mode.equals("transfer")||mode.equals("debug"))return 1;
         return 2;
     }
     private void render(){if(destroyed||busy)return;List<CameraPage.Row> rows=new ArrayList<CameraPage.Row>();
@@ -239,9 +246,10 @@ public final class LibraryActivity extends Activity {
             rows.add(new CameraPage.Row("手机传输",transfer?transferStateLabel():"关闭 · 手机自动接收新照片","设置"));
             boolean face=TransferSettings.faceDetection(this);
             rows.add(new CameraPage.Row("人脸检测",face?"开启 · 相机原生人脸优先对焦":"关闭 · 使用相机原设置","设置"));
+            rows.add(new CameraPage.Row("调试工具","Wi-Fi · ADB / Telnet · 相机信息","调试"));
             rows.add(new CameraPage.Row("语言",Lang.label()+" · 五国语言","设置"));
             rows.add(new CameraPage.Row("导入胶卷","从 SD 卡 LUTS 文件夹加入胶卷","打开"));
-            rows.add(new CameraPage.Row("使用说明","全部功能、按键与保存方式 · 42 条","查看"));
+            rows.add(new CameraPage.Row("使用说明","全部功能、按键与保存方式 · 43 条","查看"));
             rows.add(new CameraPage.Row("关于","原作者、移植与开源致谢","查看"));
             rows.add(new CameraPage.Row("UI 动画预览","胶片货架/快门/测光动效测试","打开"));
             rows.add(new CameraPage.Row("回到"+(recipeMode()?"相机列表":"胶卷库"),"继续选择或拍摄","返回"));
@@ -251,6 +259,8 @@ public final class LibraryActivity extends Activity {
             page.note="Yonitska（Bilibili）移植增强 · 原作者：瓦尔基里（小红薯 ID） · GitHub: https://github.com/EnglandLobster/sony-lut-camera（基于这个地址修改）";page.footer="↑↓ 选择   ● 确认   MENU 返回";
         }else if(mode.equals("transfer")){
             renderTransfer(rows);
+        }else if(mode.equals("debug")){
+            renderDebug(rows);
         }else if(mode.equals("transfer_videos")){
             page.section="手机传输";page.title="选择录像";page.subtitle="只传已勾选并写完的录像 · 手机端仍需点按下载";
             rows.add(new CameraPage.Row("刷新列表","重新扫描 DCIM、MP_ROOT 与 PRIVATE","刷新"));
@@ -338,6 +348,7 @@ public final class LibraryActivity extends Activity {
             rows.add(new CameraPage.Row("手机连接相机","配套 App 内一键加入相机 Wi-Fi · 首次输入配对码","传输"));
             rows.add(new CameraPage.Row("录像传输","手机传输页勾选已完成录像 · 手机端点按下载","传输"));
             rows.add(new CameraPage.Row("人脸检测","MENU → 更多 → 人脸检测 · 使用相机原生人脸优先对焦","对焦"));
+            rows.add(new CameraPage.Row("调试工具","MENU → 更多 → 调试工具 · Wi-Fi / ADB / Telnet","调试"));
             rows.add(new CameraPage.Row("回放相册","按回放键打开 · 左右翻图 · 中央键对照原片","回放"));
             rows.add(new CameraPage.Row("接触印相总览","回放时按下键打开 4×3 缩略图","回放"));
             rows.add(new CameraPage.Row("回放放大与平移","C3 切换 1×/2× · 放大后方向键平移画面","回放"));
@@ -712,15 +723,16 @@ public final class LibraryActivity extends Activity {
                 TransferSettings.setFaceDetection(this,enabled);
                 render();page.toast(enabled?"人脸优先对焦已开启 · 下次拍照生效":"人脸检测已关闭 · 下次拍照恢复相机设置");
             }
-            else if(selection==4){mode="language";selection=UiList.clamp(indexOfLanguage(Lang.code()),Lang.CODES.length);render();return;}
-            else if(selection==5){if(recipeMode()){page.toast("请先在“拍摄模式”切换到真 LUT 模式");return;}mode="import";selection=0;}
-            else if(selection==6){mode="help";selection=0;}
-            else if(selection==7){mode="about";selection=0;}
-            else if(selection==8){startActivity(new android.content.Intent(this,UiMotionDemoActivity.class));return;}
-            else if(selection==9){homePage();return;}
-            else if(selection==10){exitToCamera();return;}
-            else if(selection==11){if(recipeMode()){page.toast("配方会直接写入照片，不使用取景拟合");return;}previewSettings();return;}
-            else if(selection==12&&SonyAppPolicy.hasDebugHelper(this)){openDebugHelper();return;}
+            else if(selection==4){openDebugPage();return;}
+            else if(selection==5){mode="language";selection=UiList.clamp(indexOfLanguage(Lang.code()),Lang.CODES.length);render();return;}
+            else if(selection==6){if(recipeMode()){page.toast("请先在“拍摄模式”切换到真 LUT 模式");return;}mode="import";selection=0;}
+            else if(selection==7){mode="help";selection=0;}
+            else if(selection==8){mode="about";selection=0;}
+            else if(selection==9){startActivity(new android.content.Intent(this,UiMotionDemoActivity.class));return;}
+            else if(selection==10){homePage();return;}
+            else if(selection==11){exitToCamera();return;}
+            else if(selection==12){if(recipeMode()){page.toast("配方会直接写入照片，不使用取景拟合");return;}previewSettings();return;}
+            else if(selection==13&&SonyAppPolicy.hasDebugHelper(this)){openDebugHelper();return;}
             else{previewSettings();return;}
             render();
         }else if(mode.equals("transfer")){
@@ -739,12 +751,14 @@ public final class LibraryActivity extends Activity {
             else if(selection==8){stopTransferPoll();mode="options";selection=2;render();}
         }else if(mode.equals("transfer_videos")){
             transferVideoAction();
+        }else if(mode.equals("debug")){
+            debugAction();
         }else if(mode.equals("language")){
             if(selection>=0&&selection<Lang.CODES.length){
                 Lang.set(this,Lang.CODES[selection]);
                 render();page.toast(Lang.label()+" · "+Lang.t("语言已切换"));
-            }else{mode="options";selection=4;render();}
-        }else if(mode.equals("about")){mode="options";selection=7;render();
+            }else{mode="options";selection=5;render();}
+        }else if(mode.equals("about")){mode="options";selection=8;render();
         }else if(mode.equals("beauty")){
             if(selection==0)cycleBeauty(true);
             else if(selection==1)cycleBeauty(false);
@@ -752,7 +766,7 @@ public final class LibraryActivity extends Activity {
         }else if(mode.equals("preview_options")||mode.equals("preview_warning")||mode.equals("preview_error")){
             if(selection==2)libraryPage();else choosePreview(selection==0);
         }else if(mode.equals("exit_error")){if(selection==0)exitToCamera();else if(selection==1&&SonyAppPolicy.hasDebugHelper(this))openDebugHelper();else homePage();
-        }else if(mode.equals("help")){mode="options";selection=6;render();
+        }else if(mode.equals("help")){mode="options";selection=7;render();
         }else if(mode.equals("notice")){if(previous.equals("loading")){initializeLibrary();return;}mode=previous;selection=0;render();}
     }
     private void renderTransfer(List<CameraPage.Row> rows){
@@ -870,8 +884,117 @@ public final class LibraryActivity extends Activity {
         int at=selection-3;
         if(at>=0&&at<videos.size())toggleVideo(videos.get(at));
     }
+    private TweakTools tweakTools(){
+        if(tweakTools==null)tweakTools=new TweakTools(this);
+        return tweakTools;
+    }
+    private void openDebugPage(){
+        stopTransferPoll();mode="debug";selection=0;debugStatus=null;debugStatusLoading=false;
+        render();startDebugPoll();loadDebugStatus();
+    }
+    private void startDebugPoll(){ui.removeCallbacks(debugPoll);if(mode.equals("debug"))ui.postDelayed(debugPoll,1000);}
+    private void stopDebugPoll(){ui.removeCallbacks(debugPoll);}
+    private void loadDebugStatus(){
+        if(debugStatusLoading||destroyed)return;
+        debugStatusLoading=true;
+        final TweakTools tools=tweakTools();
+        io.execute(new Runnable(){public void run(){
+            final TweakTools.Status status=tools.readStatus();
+            ui.post(new Runnable(){public void run(){
+                debugStatusLoading=false;
+                if(destroyed)return;
+                debugStatus=status;
+                if(mode.equals("debug"))render();
+            }});
+        }});
+    }
+    private static String debugValue(String text){return text==null||text.length()==0?"不可用":text;}
+    private void renderDebug(List<CameraPage.Row> rows){
+        TweakTools.Status s=debugStatus;String loading=s==null?"读取中":"";
+        page.section="更多";page.title="调试工具";page.subtitle="Wi-Fi · ADB / Telnet · 相机信息";
+        rows.add(new CameraPage.Row("相机型号",s==null?loading:debugValue(s.model),"信息"));
+        rows.add(new CameraPage.Row("区域",s==null?loading:debugValue(s.region),"信息"));
+        rows.add(new CameraPage.Row("序列号",s==null?loading:debugValue(s.serial),"信息"));
+        rows.add(new CameraPage.Row("Android",s==null?loading:debugValue(s.platform),"信息"));
+        rows.add(new CameraPage.Row("Wi-Fi",s==null?loading:s.wifiDetail,s!=null&&s.wifiEnabled?"开启":"关闭"));
+        rows.add(new CameraPage.Row("Wi-Fi 设置","打开相机系统 Wi-Fi 连接页面","打开"));
+        rows.add(new CameraPage.Row("Telnet",s==null?loading:(s.telnetRunning?"运行中 · 端口 23":"已停止"),s!=null&&s.telnetRunning?"运行中":"停止"));
+        rows.add(new CameraPage.Row("ADB",s==null?loading:(s.adbRunning?"运行中 · 端口 5555":"已停止"),s!=null&&s.adbRunning?"运行中":"停止"));
+        rows.add(new CameraPage.Row("返回","保留当前调试连接","返回"));
+        page.note=s!=null&&s.error.length()>0?"部分功能不可用："+s.error:"ADB/Telnet 无认证，仅在可信网络开启 · 退出应用会停止服务并保留 Wi-Fi";
+        page.footer="↑↓ 选择   ● 切换 / 打开   MENU 返回";
+    }
+    private void debugAction(){
+        if(busy)return;
+        if(selection==4){toggleDebugWifi();return;}
+        if(selection==5){openWifiSettings();return;}
+        if(selection==6){toggleDebugService(true);return;}
+        if(selection==7){toggleDebugService(false);return;}
+        if(selection==8){stopDebugPoll();mode="options";selection=4;render();return;}
+    }
+    private void toggleDebugWifi(){
+        final boolean enable=debugStatus==null||!debugStatus.wifiEnabled;
+        runTask(enable?"正在开启 Wi-Fi":"正在关闭 Wi-Fi",new Task(){public void run()throws Exception{
+            if(enable){
+                TransferSettings.setEnabled(LibraryActivity.this,false);
+                TransferService.stop(LibraryActivity.this);
+            }
+            tweakTools().setWifi(enable);
+            getPreferences(0).edit().putBoolean("debug_wifi_armed",enable).commit();
+        }},new Runnable(){public void run(){
+            debugWifiArmed=enable;debugStatus=null;loadDebugStatus();
+            if(mode.equals("debug"))render();
+            if(page!=null)page.toast(enable?"Wi-Fi 已开启 · 请在系统 Wi-Fi 设置中连接":"Wi-Fi 已关闭");
+        }});
+    }
+    private void openWifiSettings(){
+        runTask("正在打开 Wi-Fi 设置",new Task(){public void run()throws Exception{
+            tweakTools().setWifi(true);
+            getPreferences(0).edit().putBoolean("debug_wifi_armed",true).commit();
+        }},new Runnable(){public void run(){
+            debugWifiArmed=true;
+            try{startActivity(new Intent("com.sony.scalar.app.wifisettings.WifiSettings"));}
+            catch(RuntimeException e){showNotice("无法打开 Wi-Fi 设置","相机未提供 Wi-Fi 设置页面。");}
+        }});
+    }
+    private void toggleDebugService(final boolean telnet){
+        if(debugStatus==null){if(page!=null)page.toast("状态读取中，请稍候");return;}
+        final boolean enable=telnet?!debugStatus.telnetRunning:!debugStatus.adbRunning;
+        final String label=telnet?(enable?"正在启动 Telnet":"正在停止 Telnet"):(enable?"正在启动 ADB":"正在停止 ADB");
+        runTask(label,new Task(){public void run()throws Exception{
+            try{
+                if(telnet)tweakTools().setTelnet(enable);
+                else tweakTools().setAdb(enable);
+            }catch(Throwable t){throw new IOException(t.toString());}
+        }},new Runnable(){public void run(){
+            debugStatus=null;loadDebugStatus();
+            if(mode.equals("debug"))render();
+            if(page!=null)page.toast(telnet?(enable?"Telnet 已启动":"Telnet 已停止"):(enable?"ADB 已启动":"ADB 已停止"));
+        }});
+    }
+    /** With debug Wi-Fi active, return to the Android launcher instead of
+     * Sony's native UI. Tweak's #246 fix: the native handover can reboot the
+     * camera while Wi-Fi/firmware daemons are active. Daemons are stopped
+     * first; Wi-Fi stays on (user's choice). */
+    private boolean exitDebugToLauncher(){
+        if(!debugWifiArmed||tweakTools==null||!tweakTools.wifiEnabled())return false;
+        handoffLog("debug_exit_home");
+        TransferService.stop(this);
+        try{
+            startActivity(new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
+                    .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+            finish();
+            return true;
+        }catch(Throwable e){
+            android.util.Log.w("LutUI","debug_home_failed",e);
+            return false;
+        }
+    }
     private void exitToCamera(){
         if(exiting||busy)return;exiting=true;previewRequests.next();
+        stopDebugPoll();
+        if(tweakTools!=null)try{tweakTools.stopDaemons();}catch(Throwable e){android.util.Log.w("LutUI","debug_stop_failed",e);}
+        if(exitDebugToLauncher())return;
         if(page!=null){page.busy=true;page.title="正在返回相机";page.subtitle="正在关闭手机传输并结束会话";page.invalidate();}
         // Close the HTTP port, Wi-Fi Direct group and foreground service before
         // asking Sony to bring its own camera back. Runtime.stopNow is bounded
@@ -891,11 +1014,12 @@ public final class LibraryActivity extends Activity {
     @Override public void onBackPressed(){if(exiting)return;if(page==null){exitToCamera();return;}if(busy)return;if(page.loadingFilm())return;
         if(isHome(mode)){if(mode.equals("library"))lastSelection=selection;else rememberRecipe();mode="options";selection=0;render();}
         else if(mode.equals("notice")){if(previous.equals("loading"))exitToCamera();else action();}
-        else if(mode.equals("help")){mode="options";selection=6;render();}
-        else if(mode.equals("about")){mode="options";selection=7;render();}
+        else if(mode.equals("help")){mode="options";selection=7;render();}
+        else if(mode.equals("about")){mode="options";selection=8;render();}
         else if(mode.equals("transfer")){stopTransferPoll();mode="options";selection=2;render();}
         else if(mode.equals("transfer_videos")){openTransferPage();}
-        else if(mode.equals("language")){mode="options";selection=4;render();}
+        else if(mode.equals("debug")){stopDebugPoll();mode="options";selection=4;render();}
+        else if(mode.equals("language")){mode="options";selection=5;render();}
         else if(mode.equals("beauty")){mode="options";selection=1;render();}
         else if(mode.equals("shoot_mode")){mode="options";selection=0;render();}
         else if(mode.equals("gallery")){homePage();}
@@ -945,9 +1069,10 @@ public final class LibraryActivity extends Activity {
         if(page!=null&&!busy&&!videoLaunchPending&&!page.loadingFilm()&&isHome(mode))render();
         if(TransferSettings.enabled(this))TransferService.start(this);
         if(mode.equals("transfer"))startTransferPoll();
+        if(mode.equals("debug")){startDebugPoll();loadDebugStatus();}
         SonyAppPolicy.register(this);if(page!=null)try{page.startDisplayTracking();displayStarted=true;}catch(ClassNotFoundException e){android.util.Log.i("LutLibrary","non-Sony UI preview");}catch(Exception e){showNotice("屏幕初始化失败",explain(e));}}
-    @Override protected void onPause(){cancelVideoReturnWait("pause");ui.removeCallbacks(exitTimeout);stopTransferPoll();if(exitRequest!=null)exitRequest.cancel();if(exiting)android.util.Log.i("LutUI","native_exit_activity_paused");if(page!=null&&page.loadingFilm())page.cancelLoadingFilm();if(displayStarted){page.stopDisplayTracking();displayStarted=false;}super.onPause();}
-    @Override protected void onDestroy(){destroyed=true;previewRequests.next();io.shutdown();ui.removeCallbacksAndMessages(null);
+    @Override protected void onPause(){cancelVideoReturnWait("pause");ui.removeCallbacks(exitTimeout);stopTransferPoll();stopDebugPoll();if(exitRequest!=null)exitRequest.cancel();if(exiting)android.util.Log.i("LutUI","native_exit_activity_paused");if(page!=null&&page.loadingFilm())page.cancelLoadingFilm();if(displayStarted){page.stopDisplayTracking();displayStarted=false;}super.onPause();}
+    @Override protected void onDestroy(){destroyed=true;previewRequests.next();stopDebugPoll();io.shutdown();ui.removeCallbacksAndMessages(null);
         if(recipeImages!=null){for(Bitmap bitmap:recipeImages)if(bitmap!=null&&!bitmap.isRecycled())bitmap.recycle();recipeImages=null;}
         if(page!=null){page.preview=null;page.cardImages=null;page.cancelLoadingFilm();}if(previews!=null)previews.clear();super.onDestroy();}
 }

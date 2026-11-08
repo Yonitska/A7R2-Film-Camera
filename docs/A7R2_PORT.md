@@ -1709,6 +1709,36 @@ video starts. The `jpegSize()`/size-mismatch diagnostics remain. Artifacts:
 `36a0a358aa4b1ad824cdb2f8839698e2ef4d93e6468582e173223d2406d064bc`,
 version `0.9.0-beta.5-a7r2.59` / code 155.
 
+### a7r2.60 Built-in Developer/Info tools from OpenMemories Tweak
+
+The user relies on OpenMemories Tweak 0.11 for Wi-Fi/ADB/Telnet while
+debugging, but exiting Tweak with Wi-Fi active reboots the camera. The
+Developer + Info features now live in “更多 → 调试工具”:
+
+- Model, region, serial and Android platform are read through
+  `NativeProperty` from the pinned Tweak 0.11 `libtweak.so`.
+- Wi-Fi uses `WifiManager`/`ConnectivityManager` and shows SSID/IP; a
+  “Wi-Fi 设置” row opens `com.sony.scalar.app.wifisettings.WifiSettings`.
+- Telnet starts `busybox telnetd -l sh`; ADB starts
+  `nativeLibraryDir/libadbd.so &` through Tweak's `Shell.execAndroid` chroot
+  path. Both are matched with `Procfs.findProcess` and stopped with
+  `kill -HUP`.
+- All native/shell work runs on LibraryActivity's I/O executor; the page polls
+  once per second and stops on back/pause/exit.
+- `libtweak.so` (MIT, Tweak/Platform) and `libadbd.so` (Apache-2.0, AOSP
+  system/core) are copied into both `lib/armeabi` and `lib/armeabi-v7a`.
+  `check_package.py` verifies both entries and their hashes. Notices are in
+  `third_party/openmemories-tweak/` and inside the APK.
+- Exit stops adbd/telnetd but keeps Wi-Fi. If the debug page enabled Wi-Fi,
+  the app exits to the Android launcher (HOME) instead of Sony's native UI,
+  following Tweak #246; this avoids the Android→native handover reboot. It
+  does not register Tweak's `DisableWiFiOnSuspend` receiver.
+- Video/Region/Protection Backup.bin tweaks remain out of scope.
+- Artifacts: `dist/SonyLutTest.apk`, 6,773,760 B, SHA-256
+  `e5ed2838e2753d8cb0e3fe0dc22ee4e2a5be08e95b637c97e4d4c3cd75b95b8e`,
+  version `0.9.0-beta.5-a7r2.60` / code 156; verify `Debug tools` on the A7R2,
+  telnet/adb from the laptop, and the HOME exit.
+
 ## Main risks
 
 - Sony `CameraSequence`/`DefaultDevelopFilter` and the 42m map are private

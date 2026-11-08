@@ -192,6 +192,7 @@ final class TraditionalChinese {
         MAP.put('输','輸');
         MAP.put('边','邊');
         MAP.put('过','過');
+        MAP.put('运','運');
         MAP.put('还','還');
         MAP.put('这','這');
         MAP.put('进','進');

@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.9.0-beta.5-a7r2.60 — 内置调试工具：Wi-Fi / ADB / Telnet + 相机信息（A7R2 本地测试版）
+
+- 把 OpenMemories Tweak 0.11 的 **Developer + Info** 功能移植到“更多 → 调试工具”：
+  - 只读相机信息：型号、区域、序列号、Android 平台；
+  - Wi-Fi 开关与当前 SSID/IP，另有“Wi-Fi 设置”直接打开相机系统页面；
+  - Telnet 开关（端口 23）与 ADB 开关（端口 5555），状态实时刷新。
+- Tweak 的 MIT Java/JNI（`android/tweak/...`、`libtweak.so`）和 AOSP adbd
+  （Apache-2.0，`libadbd.so`）按原包名保留 JNI 绑定；两个 ABI 目录都放入
+  预编译库，避免 armeabi-only 库在 v7a 主 ABI 下不可见。许可、来源和 SHA-256
+  见 `third_party/openmemories-tweak/`，APK 内也打包 MIT/Apache 文本。
+- 退出行为：停止 adbd/telnetd，**保留 Wi-Fi**。如果调试页开过 Wi-Fi，退出时
+  按 Tweak #246 的修复走 Android 桌面（HOME intent），避免 Sony Android→原生
+  相机切换时重启；Wi-Fi 未开启时仍走原来的 Sony 原生退出。
+- 不注册 Tweak 的 `DisableWiFiOnSuspend` 广播接收器，也不改 Video/Region/
+  Protection 的 Backup.bin 设置（本阶段只做 Developer + Info）。
+- 版本 `0.9.0-beta.5-a7r2.60` / code 156。本地维护者构建 APK 6,773,760 B，
+  SHA-256 `e5ed2838e2753d8cb0e3fe0dc22ee4e2a5be08e95b637c97e4d4c3cd75b95b8e`。
+  本版为本地测试签名，不对外分发。
+  真机验证：打开调试工具→开 Wi-Fi/连接→开 Telnet（laptop 连 23）→开 ADB
+  （`adb connect <IP>:5555`）→退出应用不重启；并回归真 LUT/录像/配方。
+
 ## 0.9.0-beta.5-a7r2.59 — 配方慢扫描不再占住相机（A7R2 本地测试版）
 
 - a7r2.58 让配方 DCIM 扫描在 UI 超时、门控回到 READY 后继续跑 30 秒。用户报告

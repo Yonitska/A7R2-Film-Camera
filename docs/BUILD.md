@@ -72,7 +72,14 @@ python3 scripts/bootstrap_dependencies.py --helper
 bash dev-connect/build.sh
 ```
 
-This reuses verified OpenMemories Tweak 0.11 native components. The helper currently selects a fixed development SSID in `ConnectActivity`; configure it for your test network before building. Passwords are learned and stored only on the camera, never supplied by this repository. Its build expects the signing key created/preserved for the main app.
+This reuses verified OpenMemories Tweak 0.11 native components. The main app
+also bundles `libtweak.so` and `libadbd.so` for its Developer/Info page; the
+pinned copies and MIT/Apache notices live in `third_party/openmemories-tweak/`
+and are copied into both ABI directories. The helper currently selects a fixed
+development SSID in `ConnectActivity`; configure it for your test network
+before building. Passwords are learned and stored only on the camera, never
+supplied by this repository. Its build expects the signing key created and
+preserved for the main app.
 
 ## Local research tools
 

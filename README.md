@@ -7,7 +7,7 @@ captures, offers a camera-native "film recipe" mode, records video, and replaces
 the usual Sony interface with a film-shelf / darkroom UI.
 
 > **Status: beta, unfinished, and not affiliated with Sony.** The current source
-> version is `0.9.0-beta.5-a7r2.59`; local builds use a test key. The port has
+> version is `0.9.0-beta.5-a7r2.60`; local builds use a test key. The port has
 > only ever been tested on an ILCE-7RM2 running firmware 4.01, and hardware
 > validation of the latest build is still in progress. It is not a polished
 > product. Read [Known issues](#known-issues) before installing it.
@@ -199,8 +199,10 @@ Special thanks to these projects and authors:
 - **ShotDirector** (MIT) — the Wi-Fi Direct `DirectManager` enable/startGo
   sequence and the S1 `autoFocus`/`cancelAutoFocus` pattern. Its pose-card data
   is **not** MIT and is not included here.
-- **OpenMemories Tweak** (MIT) — Java bridge used only by the optional
-  `dev-connect` tool.
+- **OpenMemories Tweak** (MIT) and **OpenMemories-Platform** (MIT) — the
+  Developer/Info settings page, Java bridge, and `libtweak.so`; `libadbd.so`
+  is AOSP adbd (Apache-2.0). Notices and checksums are in
+  `third_party/openmemories-tweak/`.
 - **Sony-PMCA-RE** — installation tool for PMCA apps.
 - **bonyback1's Ricoh mod** (Apache-2.0) — interface reference only.
 - **libjpeg-turbo**, **Noto Sans SC/KR** (SIL OFL), and **Unsplash** photos used

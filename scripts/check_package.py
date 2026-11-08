@@ -98,7 +98,19 @@ with zipfile.ZipFile(apk) as z:
         assert 'Advanced_SIMD' not in objattr
         report['native'][abi]={'bytes':len(data),'source_object_arch':expected,
             'linked_attributes':attr,'needed':re.findall(r'Shared library: \[(.*?)\]',elf(['-d',library]))}
-    for name in ['assets/JPEG-LICENSE.txt','assets/JPEG-IJG.txt','assets/GNU-STL-NOTICE.txt']:
+    # OpenMemories Tweak prebuilts must be in the ABI directory the device
+    # actually selects. An armeabi-only copy is invisible when v7a is primary.
+    tweak=root/'third_party/openmemories-tweak/armeabi'
+    for abi in ('armeabi','armeabi-v7a'):
+        for name in ('libtweak.so','libadbd.so'):
+            entry='lib/'+abi+'/'+name
+            assert entry in z.namelist(), entry
+            data=z.read(entry)
+            assert data[:5]==b'\x7fELF\x01' and data[18:20]==b'\x28\0', entry
+            assert hashlib.sha256(data).hexdigest()==hashlib.sha256((tweak/name).read_bytes()).hexdigest(), entry
+    for name in ['assets/OPENMEMORIES-TWEAK-MIT.txt','assets/ADBD-APACHE-2.0.txt',
+                 'assets/OPENMEMORIES-TWEAK.txt',
+                 'assets/JPEG-LICENSE.txt','assets/JPEG-IJG.txt','assets/GNU-STL-NOTICE.txt']:
         assert name in z.namelist()
 report['badging']=subprocess.check_output([str(sdk/'build-tools/36.0.0/aapt2'),'dump','badging',str(apk)],text=True)
 assert re.search(r"(?:minSdkVersion|sdkVersion):'10'",report['badging'])

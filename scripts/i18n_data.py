@@ -1562,3 +1562,61 @@ add("Wi-Fi Direct 群组已建立，但无法读取网络参数",
     "Wi-Fi Direct group started, but network details are unavailable",
     "Wi-Fi Directグループは確立しましたが、ネットワーク情報を読み込めません",
     "Wi-Fi Direct 그룹은 만들어졌지만 네트워크 정보를 읽을 수 없습니다")
+
+# ---------------------------------------------------------------- debug tools
+add("调试工具", "Debug tools", "デバッグツール", "디버그 도구")
+add("Wi-Fi · ADB / Telnet · 相机信息", "Wi-Fi · ADB / Telnet · Camera info",
+    "Wi-Fi · ADB / Telnet · カメラ情報", "Wi-Fi · ADB / Telnet · 카메라 정보")
+add("相机型号", "Camera model", "カメラモデル", "카메라 모델")
+add("区域", "Region", "リージョン", "지역")
+add("序列号", "Serial number", "シリアル番号", "일련번호")
+add("读取中", "Reading…", "読み取り中…", "읽는 중…")
+add("不可用", "Unavailable", "利用不可", "사용할 수 없음")
+add("调试", "Debug", "デバッグ", "디버그")
+add("Wi-Fi 设置", "Wi-Fi settings", "Wi-Fi設定", "Wi-Fi 설정")
+add("打开相机系统 Wi-Fi 连接页面", "Open the camera's Wi-Fi settings",
+    "カメラのWi-Fi設定を開く", "카메라 Wi-Fi 설정 열기")
+add("保留当前调试连接", "Keep the current debug connection",
+    "現在のデバッグ接続を保持", "현재 디버그 연결 유지")
+add("状态读取中，请稍候", "Reading status; please wait",
+    "状態を読み取り中です。お待ちください", "상태를 읽는 중입니다. 기다려 주세요")
+add("部分功能不可用：", "Some functions are unavailable: ",
+    "一部の機能を利用できません：", "일부 기능을 사용할 수 없습니다: ")
+add("ADB/Telnet 无认证，仅在可信网络开启 · 退出应用会停止服务并保留 Wi-Fi",
+    "ADB/Telnet are unauthenticated; enable only on a trusted network. Leaving the app stops the services and keeps Wi-Fi on",
+    "ADB/Telnetは認証なしです。信頼できるネットワークでのみ有効にしてください。アプリを終了するとサービスは停止し、Wi-Fiは維持されます",
+    "ADB/Telnet은 인증이 없습니다. 신뢰할 수 있는 네트워크에서만 켜십시오. 앱을 종료하면 서비스는 중지되고 Wi-Fi는 유지됩니다")
+add("正在开启 Wi-Fi", "Enabling Wi-Fi", "Wi-Fiを有効にしています", "Wi-Fi 켜는 중")
+add("正在关闭 Wi-Fi", "Disabling Wi-Fi", "Wi-Fiを無効にしています", "Wi-Fi 끄는 중")
+add("Wi-Fi 已开启 · 请在系统 Wi-Fi 设置中连接",
+    "Wi-Fi is on · Connect in the camera's Wi-Fi settings",
+    "Wi-Fiは有効です · カメラのWi-Fi設定で接続してください",
+    "Wi-Fi가 켜졌습니다 · 카메라 Wi-Fi 설정에서 연결하세요")
+add("正在打开 Wi-Fi 设置", "Opening Wi-Fi settings", "Wi-Fi設定を開いています", "Wi-Fi 설정 여는 중")
+add("无法打开 Wi-Fi 设置", "Could not open Wi-Fi settings", "Wi-Fi設定を開けません", "Wi-Fi 설정을 열 수 없습니다")
+add("相机未提供 Wi-Fi 设置页面。", "The camera did not provide a Wi-Fi settings page.",
+    "カメラにWi-Fi設定画面がありません。", "카메라에 Wi-Fi 설정 화면이 없습니다.")
+add("Wi-Fi 不可用", "Wi-Fi unavailable", "Wi-Fi利用不可", "Wi-Fi 사용할 수 없음")
+add("Wi-Fi 已开启", "Wi-Fi enabled", "Wi-Fi有効", "Wi-Fi 켜짐")
+add("Wi-Fi 已关闭", "Wi-Fi disabled", "Wi-Fi無効", "Wi-Fi 꺼짐")
+add("正在连接", "Connecting", "接続中", "연결 중")
+add("运行中", "Running", "実行中", "실행 중")
+add("运行中 · 端口 23", "Running · port 23", "実行中 · ポート23", "실행 중 · 포트 23")
+add("运行中 · 端口 5555", "Running · port 5555", "実行中 · ポート5555", "실행 중 · 포트 5555")
+add("已停止", "Stopped", "停止", "중지됨")
+add("停止", "Stop", "停止", "중지")
+add("已启动", "Started", "開始しました", "시작됨")
+add("正在启动 Telnet", "Starting Telnet", "Telnetを開始しています", "Telnet 시작 중")
+add("正在停止 Telnet", "Stopping Telnet", "Telnetを停止しています", "Telnet 중지 중")
+add("正在启动 ADB", "Starting ADB", "ADBを開始しています", "ADB 시작 중")
+add("正在停止 ADB", "Stopping ADB", "ADBを停止しています", "ADB 중지 중")
+add("Telnet 已启动", "Telnet started", "Telnetを開始しました", "Telnet 시작됨")
+add("Telnet 已停止", "Telnet stopped", "Telnetを停止しました", "Telnet 중지됨")
+add("ADB 已启动", "ADB started", "ADBを開始しました", "ADB 시작됨")
+add("ADB 已停止", "ADB stopped", "ADBを停止しました", "ADB 중지됨")
+add("全部功能、按键与保存方式 · 43 条", "All features, keys and saving · 43 entries",
+    "全機能・キー・保存方法 · 43項目", "모든 기능·키·저장 방식 · 43개")
+add("MENU → 更多 → 调试工具 · Wi-Fi / ADB / Telnet",
+    "MENU → More → Debug tools · Wi-Fi / ADB / Telnet",
+    "MENU → その他 → デバッグツール · Wi-Fi / ADB / Telnet",
+    "MENU → 더 보기 → 디버그 도구 · Wi-Fi / ADB / Telnet")

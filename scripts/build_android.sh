@@ -74,13 +74,16 @@ cmake -S native -B out/android-armv5 -DCMAKE_TOOLCHAIN_FILE="$ndk/build/cmake/an
   -DJPEG_BUILD="$root/out/jpeg-android-armv5" -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_POLICY_VERSION_MINIMUM=3.5 > out/android-armv5-config.log 2>&1
 cmake --build out/android-armv5 -j4 > out/android-armv5-build.log 2>&1
-rm -rf out/apk/classes out/apk/dex out/apk/res
+rm -rf out/apk/classes out/apk/dex out/apk/res out/apk/package/lib
 mkdir -p out/apk/assets out/apk/res/drawable out/apk/classes out/apk/dex out/apk/package/lib/armeabi-v7a out/apk/package/lib/armeabi dist
 cp -R android-res/. out/apk/res/
 python3 scripts/stage_android.py --variant "$variant"
 cp vendor/libjpeg-turbo/LICENSE.md out/apk/assets/JPEG-LICENSE.txt
 cp vendor/libjpeg-turbo/README.ijg out/apk/assets/JPEG-IJG.txt
 cp "$ndk/sources/cxx-stl/gnu-libstdc++/4.9/NOTICE" out/apk/assets/GNU-STL-NOTICE.txt
+cp third_party/openmemories-tweak/LICENSE-MIT.txt out/apk/assets/OPENMEMORIES-TWEAK-MIT.txt
+cp third_party/openmemories-tweak/LICENSE-APACHE-2.0.txt out/apk/assets/ADBD-APACHE-2.0.txt
+cp third_party/openmemories-tweak/README.md out/apk/assets/OPENMEMORIES-TWEAK.txt
 python3 - <<'PY'
 import hashlib
 from pathlib import Path
@@ -125,6 +128,13 @@ stripper="$ndk/toolchains/arm-linux-androideabi-4.9/prebuilt/$host/bin/arm-linux
 "$stripper" --strip-unneeded out/apk/package/lib/armeabi-v7a/libsonylut.so
 cp out/android-armv5/libsonylut.so out/apk/package/lib/armeabi/
 "$stripper" --strip-unneeded out/apk/package/lib/armeabi/libsonylut.so
+# OpenMemories Tweak v0.11 prebuilts (MIT libtweak, Apache-2.0 adbd), pinned
+# and checksummed in third_party/openmemories-tweak. ABI selection is per APK,
+# so an armeabi-only library is invisible when armeabi-v7a is primary.
+for abi in armeabi armeabi-v7a; do
+  cp third_party/openmemories-tweak/armeabi/libtweak.so out/apk/package/lib/$abi/
+  cp third_party/openmemories-tweak/armeabi/libadbd.so out/apk/package/lib/$abi/
+done
 cp out/android/sony-lut dist/sony-lut-armv7
 "$stripper" --strip-unneeded dist/sony-lut-armv7
 python3 - <<'PY'
@@ -133,6 +143,9 @@ with zipfile.ZipFile('out/apk/unsigned.apk','a',compression=zipfile.ZIP_DEFLATED
  z.write('out/apk/dex/classes.dex','classes.dex')
  z.write('out/apk/package/lib/armeabi-v7a/libsonylut.so','lib/armeabi-v7a/libsonylut.so')
  z.write('out/apk/package/lib/armeabi/libsonylut.so','lib/armeabi/libsonylut.so')
+ for abi in ('armeabi-v7a','armeabi'):
+  for name in ('libtweak.so','libadbd.so'):
+   z.write('out/apk/package/lib/%s/%s'%(abi,name),'lib/%s/%s'%(abi,name))
 PY
 "$bt/zipalign" -f 4 out/apk/unsigned.apk out/apk/aligned.apk
 if [ ! -f out/test.keystore ]; then

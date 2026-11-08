@@ -33,6 +33,9 @@ A7R2 适配 · 胶片界面与冲洗流程 · 手机传片与人脸检测	A7R2 �
 A7R2胶片相机	A7R2膠片相機	A7R2 Film Camera	A7R2フィルムカメラ	A7R2 필름 카메라
 A7R2胶片相机 · 手机传输	A7R2膠片相機 · 手機傳輸	A7R2 Film Camera · Phone Transfer	A7R2フィルムカメラ · スマホ転送	A7R2 필름 카메라 · 휴대폰 전송
 A7R2胶片相机 编译时间：	A7R2膠片相機 編譯時間：	A7R2 Film Camera  Build: 	A7R2フィルムカメラ  ビルド: 	A7R2 필름 카메라  빌드: 
+ADB 已停止	ADB 已停止	ADB stopped	ADBを停止しました	ADB 중지됨
+ADB 已启动	ADB 已啟動	ADB started	ADBを開始しました	ADB 시작됨
+ADB/Telnet 无认证，仅在可信网络开启 · 退出应用会停止服务并保留 Wi-Fi	ADB/Telnet 無認證，僅在可信網路開啟 · 退出應用會停止服務並保留 Wi-Fi	ADB/Telnet are unauthenticated; enable only on a trusted network. Leaving the app stops the services and keeps Wi-Fi on	ADB/Telnetは認証なしです。信頼できるネットワークでのみ有効にしてください。アプリを終了するとサービスは停止し、Wi-Fiは維持されます	ADB/Telnet은 인증이 없습니다. 신뢰할 수 있는 네트워크에서만 켜십시오. 앱을 종료하면 서비스는 중지되고 Wi-Fi는 유지됩니다
 AF 选择 · 方向键移动 · 中键确认 · MENU 取消	AF 選擇 · 方向鍵移動 · 中鍵確認 · MENU 取消	AF select · Arrows move · Center confirms · MENU cancels	AF選択 · 方向キー移動 · 中央で決定 · MENU キャンセル	AF 선택 · 방향키 이동 · 중앙 확인 · MENU 취소
 AF-A 自动	AF-A 自動	AF-A Auto	AF-A オート	AF-A 자동
 AF-C 连续	AF-C 連續	AF-C Continuous	AF-C コンティニュアス	AF-C 연속
@@ -66,6 +69,7 @@ MENU → 更多 → 当前胶卷的取景	MENU → 更多 → 當前膠捲的取
 MENU → 更多 → 手机传输 · App 打开期间新照片后台发送	MENU → 更多 → 手機傳輸 · App 開啟期間新照片後臺傳送	MENU → More → Phone Transfer · New photos sent while this app is open	MENU → その他 → スマホ転送 · アプリ起動中に新しい写真をバックグラウンド送信	MENU → 더 보기 → 휴대폰 전송 · 앱이 열려 있는 동안 새 사진 백그라운드 전송
 MENU → 更多 → 拍摄模式 · 真 LUT / 近似配方	MENU → 更多 → 拍攝模式 · 真 LUT / 近似配方	MENU → More → Capture mode · Real LUT / Approx. Recipe	MENU → その他 → 撮影モード · リアルLUT / 近似レシピ	MENU → 더 보기 → 촬영 모드 · 리얼 LUT / 근사 레시피
 MENU → 更多 → 照片美化 · 皮肤平滑/降噪	MENU → 更多 → 照片美化 · 皮膚平滑/降噪	MENU → More → Beauty · Skin smooth/NR	MENU → その他 → 写真補正 · 肌補正/ノイズ低減	MENU → 더 보기 → 사진 보정 · 피부/노이즈
+MENU → 更多 → 调试工具 · Wi-Fi / ADB / Telnet	MENU → 更多 → 除錯工具 · Wi-Fi / ADB / Telnet	MENU → More → Debug tools · Wi-Fi / ADB / Telnet	MENU → その他 → デバッグツール · Wi-Fi / ADB / Telnet	MENU → 더 보기 → 디버그 도구 · Wi-Fi / ADB / Telnet
 MENU 或 BACK 取消并恢复原对焦点	MENU 或 BACK 取消並恢復原對焦點	MENU or BACK cancels and restores the AF point	MENUまたはBACKで取消し、元のAFポイントに戻す	MENU 또는 BACK으로 취소하고 원래 AF 포인트 복원
 MENU 返回	MENU 返回	MENU Back	MENU 戻る	MENU 뒤로
 MENU 返回照片列表	MENU 返回照片列表	MENU Back to Photos	MENU 写真一覧に戻る	MENU 사진 목록으로
@@ -80,6 +84,8 @@ POSE 索引失败: 	POSE 索引失敗: 	POSE index failed: 	POSEインデック�
 Recipe Lab 项目地址	Recipe Lab 專案地址	Recipe Lab project	Recipe Lab プロジェクト	Recipe Lab 프로젝트
 S 快门优先	S 快門優先	S Shutter	S シャッター優先	S 셔터 우선
 SD/POSE 不可读且无内置图 · 见 SONYLUT/POSE.TXT	SD/POSE 不可讀且無內建圖 · 見 SONYLUT/POSE.TXT	SD/POSE unreadable and no built-in image · See SONYLUT/POSE.TXT	SD/POSEが読めず内蔵画像もありません · SONYLUT/POSE.TXT参照	SD/POSE를 읽을 수 없고 내장 이미지도 없음 · SONYLUT/POSE.TXT 참조
+Telnet 已停止	Telnet 已停止	Telnet stopped	Telnetを停止しました	Telnet 중지됨
+Telnet 已启动	Telnet 已啟動	Telnet started	Telnetを開始しました	Telnet 시작됨
 UI 动画预览	UI 動畫預覽	UI Motion Demo	UIモーション試作	UI 모션 데모
 WB 日光	WB 日光	WB Daylight	WB 昼光	WB 주광
 WB 水下	WB 水下	WB Underwater	WB 水中	WB 수중
@@ -95,8 +101,14 @@ Wi-Fi Direct 未返回网络名称	Wi-Fi Direct 未返回網路名稱	Wi-Fi Dire
 Wi-Fi Direct 群组创建失败（	Wi-Fi Direct 群組建立失敗（	Wi-Fi Direct group creation failed (	Wi-Fi Directグループの作成に失敗（	Wi-Fi Direct 그룹 생성 실패 (
 Wi-Fi Direct 群组创建超时，请重试	Wi-Fi Direct 群組建立超時，請重試	Wi-Fi Direct group creation timed out; try again	Wi-Fi Directグループの作成がタイムアウトしました。再試行してください	Wi-Fi Direct 그룹 생성 시간 초과, 다시 시도하세요
 Wi-Fi Direct 群组已建立，但无法读取网络参数	Wi-Fi Direct 群組已建立，但無法讀取網路引數	Wi-Fi Direct group started, but network details are unavailable	Wi-Fi Directグループは確立しましたが、ネットワーク情報を読み込めません	Wi-Fi Direct 그룹은 만들어졌지만 네트워크 정보를 읽을 수 없습니다
+Wi-Fi · ADB / Telnet · 相机信息	Wi-Fi · ADB / Telnet · 相機資訊	Wi-Fi · ADB / Telnet · Camera info	Wi-Fi · ADB / Telnet · カメラ情報	Wi-Fi · ADB / Telnet · 카메라 정보
+Wi-Fi 不可用	Wi-Fi 不可用	Wi-Fi unavailable	Wi-Fi利用不可	Wi-Fi 사용할 수 없음
 Wi-Fi 名称(SSID)	Wi-Fi 名稱(SSID)	Wi-Fi Name (SSID)	Wi-Fi名(SSID)	Wi-Fi 이름(SSID)
 Wi-Fi 密码	Wi-Fi 密碼	Wi-Fi Password	Wi-Fiパスワード	Wi-Fi 비밀번호
+Wi-Fi 已关闭	Wi-Fi 已關閉	Wi-Fi disabled	Wi-Fi無効	Wi-Fi 꺼짐
+Wi-Fi 已开启	Wi-Fi 已開啟	Wi-Fi enabled	Wi-Fi有効	Wi-Fi 켜짐
+Wi-Fi 已开启 · 请在系统 Wi-Fi 设置中连接	Wi-Fi 已開啟 · 請在系統 Wi-Fi 設定中連線	Wi-Fi is on · Connect in the camera's Wi-Fi settings	Wi-Fiは有効です · カメラのWi-Fi設定で接続してください	Wi-Fi가 켜졌습니다 · 카메라 Wi-Fi 설정에서 연결하세요
+Wi-Fi 设置	Wi-Fi 設定	Wi-Fi settings	Wi-Fi設定	Wi-Fi 설정
 Yonitska 移植 · v	Yonitska 移植 · v	Port by Yonitska · v	Yonitska 移植 · v	Yonitska 이식 · v
 Yonitska 移植 · 原作者：瓦尔基里（小红薯 ID） · GitHub: sony-lut-camera	Yonitska 移植 · 原作者：瓦爾基里（小紅薯 ID） · GitHub: sony-lut-camera	Port by Yonitska · Original author: Valkyrie (Xiaohongshu) · GitHub: sony-lut-camera	移植 Yonitska · 原作者：ヴァルキリー（小紅書） · GitHub: sony-lut-camera	이식 Yonitska · 원작자: 발키리 (샤오홍슈) · GitHub: sony-lut-camera
 Yonitska（Bilibili）移植增强 · v	Yonitska（Bilibili）移植增強 · v	Yonitska (Bilibili) Enhanced Port · v	Yonitska（Bilibili）移植強化 · v	Yonitska(Bilibili) 이식 강화 · v
@@ -130,6 +142,7 @@ github.com/voxivoid/recipe-lab · 开放配方数据	github.com/voxivoid/recipe-
 上键隐藏或显示取景参数	上鍵隱藏或顯示取景引數	Up hides or shows finder readouts	上キーでファインダー情報を表示/非表示	위 키로 파인더 정보 표시/숨김
 下键进入 · 方向键移动 · 中央键确认	下鍵進入 · 方向鍵移動 · 中央鍵確認	Down enters · Arrows move · Center confirms	下キーで開始 · 方向キーで移動 · 中央で決定	아래로 시작 · 방향키 이동 · 중앙 확인
 不会经过美颜或降噪	不會經過美顏或降噪	No beauty or noise reduction	美肌・ノイズ低減なし	피부 보정·노이즈 감소 없음
+不可用	不可用	Unavailable	利用不可	사용할 수 없음
 不处理	不處理	No processing	処理なし	처리 안 함
 不支持	不支援	Unsupported	非対応	지원 안 됨
 不支持的 3D LUT 阶数	不支援的 3D LUT 階數	Unsupported 3D LUT size	未対応の3D LUTサイズ	지원되지 않는 3D LUT 크기
@@ -160,11 +173,13 @@ github.com/voxivoid/recipe-lab · 开放配方数据	github.com/voxivoid/recipe-
 保留当前模式	保留當前模式	Keep the current mode	現在のモードを保持	현재 모드 유지
 保留当前设置	保留當前設定	Keep current settings	現在の設定を保持	현재 설정 유지
 保留当前语言设置	保留當前語言設定	Keep the current language	現在の言語を保持	현재 언어 유지
+保留当前调试连接	保留當前除錯連線	Keep the current debug connection	現在のデバッグ接続を保持	현재 디버그 연결 유지
 保留当前选择	保留當前選擇	Keep the current choice	現在の選択を保持	현재 선택 유지
 信息	資訊	Info	情報	정보
 借鉴  M-Film（佳能）	借鑑  M-Film（佳能）	Inspired by  M-Film (Canon)	参考  M-Film（キヤノン）	참고  M-Film (Canon)
 借鉴  拍摄导演台 ShotDirector	借鑑  拍攝導演臺 ShotDirector	Inspired by  ShotDirector	参考  ShotDirector	참고  ShotDirector
 借鉴  胶片工坊 Film Studio	借鑑  膠片工坊 Film Studio	Inspired by  Film Studio	参考  Film Studio	참고  Film Studio
+停止	停止	Stop	停止	중지
 停止超时 · 已释放录像接口	停止超時 · 已釋放錄影介面	Stop timeout · Video interface released	停止タイムアウト · 動画インターフェースを解放	중지 시간 초과 · 동영상 인터페이스 해제됨
 先选胶卷 · RAW 冲洗 + 完整 3D LUT	先選膠捲 · RAW 沖洗 + 完整 3D LUT	Pick a film first · RAW develop + full 3D LUT	先にフィルムを選択 · RAW現像 + 完全3D LUT	필름 선택 · RAW 현상 + 전체 3D LUT
 光位  	光位  	Light  	光の位置  	조명 위치  
@@ -174,6 +189,7 @@ github.com/voxivoid/recipe-lab · 开放配方数据	github.com/voxivoid/recipe-
 全部	全部	All	すべて	전체
 全部功能、按键与保存方式 · 37 条	全部功能、按鍵與儲存方式 · 37 條	All features, keys and saving · 37 items	全機能・キー・保存方法 · 37項目	모든 기능·키·저장 방식 · 37개
 全部功能、按键与保存方式 · 42 条	全部功能、按鍵與儲存方式 · 42 條	All features, controls and saving · 42 items	すべての機能・ボタン・保存方法 · 42項目	모든 기능, 버튼 및 저장 방식 · 42개
+全部功能、按键与保存方式 · 43 条	全部功能、按鍵與儲存方式 · 43 條	All features, keys and saving · 43 entries	全機能・キー・保存方法 · 43項目	모든 기능·키·저장 방식 · 43개
 全部导入	全部匯入	Import All	すべて読み込む	모두 가져오기
 关	關	Off	オフ	끔
 关于	關於	About	このアプリについて	앱 정보
@@ -215,6 +231,7 @@ github.com/voxivoid/recipe-lab · 开放配方数据	github.com/voxivoid/recipe-
 动画原型无法初始化：	動畫原型無法初始化：	Could not initialize the motion prototype: 	モーション試作を初期化できません: 	모션 프로토타입을 초기화할 수 없습니다: 
 动画原型无法初始化：\n	動畫原型無法初始化：\n	Could not initialize the motion prototype:\n	モーション試作を初期化できません:\n	모션 프로토타입을 초기화할 수 없습니다:\n
 勾选	勾選	Check	チェック	선택
+区域	區域	Region	リージョン	지역
 半按合焦 · 全按完成一次拍摄	半按合焦 · 全按完成一次拍攝	Half-press focuses · Full-press takes one shot	半押しで合焦 · 全押しで1枚撮影	반누름 초점 · 완전 누름으로 한 장 촬영
 半按对焦时恢复原色 · 成片按完整胶卷冲洗	半按對焦時恢復原色 · 成片按完整膠捲沖洗	Half-press restores original color · Results get the full film develop	半押しで原色に戻る · 完成写真はフィルム通りに現像	반누름 시 원색 복원 · 결과는 필름 전체 현상 적용
 半按对焦，全按拍摄	半按對焦，全按拍攝	Half-press Focus, Full-press Shoot	半押しAF、全押し撮影	반누름 초점, 완전 누름 촬영
@@ -309,6 +326,7 @@ github.com/voxivoid/recipe-lab · 开放配方数据	github.com/voxivoid/recipe-
 已保存 · 	已儲存 · 	Saved · 	保存済み · 	저장됨 · 
 已保存 · {} · 可直接使用	已儲存 · {} · 可直接使用	Saved · {} · Ready to use	保存済み · {} · 使用できます	저장됨 · {} · 바로 사용 가능
 已保存的冲洗成片	已儲存的沖洗成片	Saved developed photo	保存済みの現像写真	저장된 현상 사진
+已停止	已停止	Stopped	停止	중지됨
 已关闭	已關閉	Stopped	オフ	꺼짐
 已切换到真 LUT 模式	已切換到真 LUT 模式	Switched to Real LUT	リアルLUTに切り替えました	리얼 LUT로 전환됨
 已切换到近似胶片配方模式	已切換到近似膠片配方模式	Switched to Approx. Recipe	近似レシピに切り替えました	근사 레시피로 전환됨
@@ -319,6 +337,7 @@ github.com/voxivoid/recipe-lab · 开放配方数据	github.com/voxivoid/recipe-
 已刷新传输状态	已重新整理傳輸狀態	Transfer status refreshed	転送状態を更新しました	전송 상태를 새로 고쳤습니다
 已勾选	已勾選	Checked	チェック済み	선택됨
 已勾选 	已勾選 	Checked 	チェック済み 	선택됨 
+已启动	已啟動	Started	開始しました	시작됨
 已启用 	已啟用 	Enabled 	有効 	활성화 
 已启用 {} · 相机直出	已啟用 {} · 相機直出	Enabled {} · Camera JPEG	{} を有効化 · カメラJPEG	{} 활성화 · 카메라 JPEG
 已处理	已處理	Done	処理済み	처리됨
@@ -334,6 +353,7 @@ github.com/voxivoid/recipe-lab · 开放配方数据	github.com/voxivoid/recipe-
 已选	已選	Selected	選択済み	선택됨
 已选择 	已選擇 	Selected 	選択 	선택 
 已选择 {} · 正在应用	已選擇 {} · 正在應用	Selected {} · Applying	{} を選択 · 適用中	{} 선택 · 적용 중
+序列号	序列號	Serial number	シリアル番号	일련번호
 开	開	On	オン	켬
 开启	開啟	On	オン	켜기
 开启 · 相机原生人脸优先对焦	開啟 · 相機原生人臉優先對焦	On · Native face-priority AF	オン · カメラ本来の顔優先AF	켜짐 · 카메라 기본 얼굴 우선 AF
@@ -398,6 +418,7 @@ github.com/voxivoid/recipe-lab · 开放配方数据	github.com/voxivoid/recipe-
 打开	開啟	Open	開く	열기
 打开已安装的相机调试工具	開啟已安裝的相機除錯工具	Open the installed camera debug tool	インストール済みのカメラデバッグツールを開く	설치된 카메라 디버그 도구 열기
 打开测试连接	開啟測試連線	Open Debug Helper	テスト接続を開く	테스트 연결 열기
+打开相机系统 Wi-Fi 连接页面	開啟相機系統 Wi-Fi 連線頁面	Open the camera's Wi-Fi settings	カメラのWi-Fi設定を開く	카메라 Wi-Fi 설정 열기
 扫描	掃描	Scan	スキャン	스캔
 扫描 LUTS 文件夹	掃描 LUTS 資料夾	Scan LUTS folder	LUTSフォルダーをスキャン	LUTS 폴더 스캔
 扫描录像	掃描錄影	Scanning Videos	動画をスキャン中	동영상 스캔 중
@@ -462,6 +483,7 @@ github.com/voxivoid/recipe-lab · 开放配方数据	github.com/voxivoid/recipe-
 无法启动拍摄	無法啟動拍攝	Could not start capture	撮影を開始できません	촬영을 시작할 수 없습니다
 无法启动调试连接清理	無法啟動除錯連線清理	Could not start debug helper cleanup	デバッグ接続の整理を開始できません	디버그 연결 정리를 시작할 수 없습니다
 无法开启 Wi-Fi Direct	無法開啟 Wi-Fi Direct	Could not enable Wi-Fi Direct	Wi-Fi Directを有効にできません	Wi-Fi Direct를 켤 수 없습니다
+无法打开 Wi-Fi 设置	無法開啟 Wi-Fi 設定	Could not open Wi-Fi settings	Wi-Fi設定を開けません	Wi-Fi 설정을 열 수 없습니다
 无法更新录像选择	無法更新錄影選擇	Could not update the video selection	動画の選択を更新できません	동영상 선택을 업데이트할 수 없습니다
 无法更新配对信息	無法更新配對資訊	Could not update pairing information	ペアリング情報を更新できません	페어링 정보를 업데이트할 수 없습니다
 无法更新预览缓存	無法更新預覽快取	Could not update the preview cache	プレビューキャッシュを更新できません	미리보기 캐시를 업데이트할 수 없습니다
@@ -523,8 +545,11 @@ github.com/voxivoid/recipe-lab · 开放配方数据	github.com/voxivoid/recipe-
 正在保存录像选择	正在儲存錄影選擇	Saving video selection	動画の選択を保存中	동영상 선택 저장 중
 正在保存成片	正在儲存成片	Saving result	完成写真を保存中	결과 저장 중
 正在保存视频	正在儲存影片	Saving video	動画を保存中	동영상 저장 중
+正在停止 ADB	正在停止 ADB	Stopping ADB	ADBを停止しています	ADB 중지 중
+正在停止 Telnet	正在停止 Telnet	Stopping Telnet	Telnetを停止しています	Telnet 중지 중
 正在停止并保存	正在停止並儲存	Stopping and saving	停止して保存中	중지 및 저장 중
 正在停止并返回	正在停止並返回	Stopping and returning	停止して戻っています	중지 후 돌아가는 중
+正在关闭 Wi-Fi	正在關閉 Wi-Fi	Disabling Wi-Fi	Wi-Fiを無効にしています	Wi-Fi 끄는 중
 正在关闭传输	正在關閉傳輸	Stopping transfer	転送を停止中	전송 중지 중
 正在关闭传输…	正在關閉傳輸…	Stopping transfer…	転送を停止中…	전송 중지 중…
 正在关闭录像接口	正在關閉錄影介面	Closing video interface	動画インターフェースを閉じています	동영상 인터페이스 닫는 중
@@ -552,6 +577,8 @@ github.com/voxivoid/recipe-lab · 开放配方数据	github.com/voxivoid/recipe-
 正在删除照片…	正在刪除照片…	Deleting photo…	写真を削除中…	사진 삭제 중…
 正在加载照片	正在載入照片	Loading photos	写真を読み込み中	사진 불러오는 중
 正在加载胶卷	正在載入膠捲	Loading film	フィルムを読み込み中	필름 불러오는 중
+正在启动 ADB	正在啟動 ADB	Starting ADB	ADBを開始しています	ADB 시작 중
+正在启动 Telnet	正在啟動 Telnet	Starting Telnet	Telnetを開始しています	Telnet 시작 중
 正在启动 Wi-Fi Direct	正在啟動 Wi-Fi Direct	Starting Wi-Fi Direct	Wi-Fi Directを起動中	Wi-Fi Direct 시작 중
 正在启动相机 Wi-Fi	正在啟動相機 Wi-Fi	Starting camera Wi-Fi	カメラWi-Fiを起動中	카메라 Wi-Fi 시작 중
 正在启动相机 Wi-Fi…	正在啟動相機 Wi-Fi…	Starting camera Wi-Fi…	カメラWi-Fiを起動中…	카메라 Wi-Fi 시작 중…
@@ -560,10 +587,12 @@ github.com/voxivoid/recipe-lab · 开放配方数据	github.com/voxivoid/recipe-
 正在应用 	正在應用 	Applying 	適用中 	적용 중 
 正在应用 {} · 相机直出	正在應用 {} · 相機直出	Applying {} · Camera JPEG	{} を適用中 · カメラJPEG	{} 적용 중 · 카메라 JPEG
 正在应用胶片	正在應用膠片	Applying film	フィルムを適用中	필름 적용 중
+正在开启 Wi-Fi	正在開啟 Wi-Fi	Enabling Wi-Fi	Wi-Fiを有効にしています	Wi-Fi 켜는 중
 正在开始录像	正在開始錄影	Starting video	録画を開始中	녹화 시작 중
 正在恢复对焦	正在恢復對焦	Restoring focus	フォーカスを復元中	초점 복원 중
 正在恢复曝光设置	正在恢復曝光設定	Restoring exposure	露出設定を復元中	노출 설정 복원 중
 正在打开	正在開啟	Opening 	開いています 	여는 중 
+正在打开 Wi-Fi 设置	正在開啟 Wi-Fi 設定	Opening Wi-Fi settings	Wi-Fi設定を開いています	Wi-Fi 설정 여는 중
 正在打开{}	正在開啟{}	Opening {}	{}を開いています	{} 여는 중
 正在打开拍照	正在開啟拍照	Opening camera	撮影画面を開いています	촬영 화면 여는 중
 正在打开照片	正在開啟照片	Opening photo	写真を開いています	사진 여는 중
@@ -588,6 +617,7 @@ github.com/voxivoid/recipe-lab · 开放配方数据	github.com/voxivoid/recipe-
 正在返回拍摄…	正在返回拍攝…	Returning to capture…	撮影に戻っています…	촬영으로 돌아가는 중…
 正在返回相机	正在返回相機	Returning to Camera	カメラに戻っています	카메라로 돌아가는 중
 正在返回胶卷库…	正在返回膠捲庫…	Returning to library…	ライブラリに戻っています…	라이브러리로 돌아가는 중…
+正在连接	正在連線	Connecting	接続中	연결 중
 正在连接相机	正在連線相機	Connecting camera	カメラに接続中	카메라 연결 중
 水下	水下	Underwater	水中	수중
 没有可用的近似预览	沒有可用的近似預覽	No approx. preview available	利用可能な近似プレビューがありません	사용 가능한 근사 미리보기가 없습니다
@@ -620,6 +650,7 @@ github.com/voxivoid/recipe-lab · 开放配方数据	github.com/voxivoid/recipe-
 照片预览超过缓存容量	照片預覽超過快取容量	Photo preview exceeds the cache	写真プレビューがキャッシュ容量を超えました	사진 미리보기가 캐시 용량을 초과했습니다
 片	片	Film	フィルム	필름
 特别感谢	特別感謝	Special Thanks	スペシャルサンクス	특별 감사
+状态读取中，请稍候	狀態讀取中，請稍候	Reading status; please wait	状態を読み取り中です。お待ちください	상태를 읽는 중입니다. 기다려 주세요
 界面	介面	Interface	表示	인터페이스
 白平衡	白平衡	White Balance	ホワイトバランス	화이트 밸런스
 白平衡设置失败：	白平衡設定失敗：	White balance failed: 	ホワイトバランス設定失敗: 	화이트 밸런스 설정 실패: 
@@ -635,9 +666,11 @@ github.com/voxivoid/recipe-lab · 开放配方数据	github.com/voxivoid/recipe-
 相机与手机之间的照片和已勾选录像传输	相機與手機之間的照片和已勾選錄影傳輸	Photo and checked-video transfer between camera and phone	カメラとスマホ間の写真と選択済み動画の転送	카메라와 휴대폰 간 사진 및 선택된 동영상 전송
 相机写入较慢 · 请稍候	相機寫入較慢 · 請稍候	The camera is writing slowly · Please wait	カメラの書き込みが遅いです · お待ちください	카메라 기록이 느립니다 · 기다려 주세요
 相机列表	相機列表	Camera List	カメラ一覧	카메라 목록
+相机型号	相機型號	Camera model	カメラモデル	카메라 모델
 相机外部媒体不可用	相機外部媒體不可用	Camera external media unavailable	カメラの外部メディアを利用できません	카메라 외부 미디어를 사용할 수 없습니다
 相机拒绝	相機拒絕	Camera refused	カメラが拒否しました	카메라가 거부했습니다
 相机未响应退出请求，可重试或打开测试连接。	相機未響應退出請求，可重試或開啟測試連線。	The camera did not acknowledge exit. Retry or open the debug helper.	カメラが終了要求に応答しません。再試行するかテスト接続を開いてください。	카메라가 종료 요청에 응답하지 않습니다. 다시 시도하거나 테스트 연결을 여세요.
+相机未提供 Wi-Fi 设置页面。	相機未提供 Wi-Fi 設定頁面。	The camera did not provide a Wi-Fi settings page.	カメラにWi-Fi設定画面がありません。	카메라에 Wi-Fi 설정 화면이 없습니다.
 相机正在写入配方 JPEG，请保持开机	相機正在寫入配方 JPEG，請保持開機	The camera is writing the recipe JPEG; keep it on	カメラがレシピJPEGを書き込み中です。電源を切らないでください	카메라가 레시피 JPEG를 기록 중입니다. 전원을 끄지 마세요
 相机没有可用的 Wi-Fi Direct 配置	相機沒有可用的 Wi-Fi Direct 配置	The camera has no Wi-Fi Direct configuration	カメラに利用可能なWi-Fi Direct設定がありません	카메라에 사용 가능한 Wi-Fi Direct 구성이 없습니다
 相机没有报告可用的录像格式	相機沒有報告可用的錄影格式	The camera did not report any video format	カメラが利用可能な動画形式を報告しません	카메라가 사용 가능한 동영상 형식을 보고하지 않았습니다
@@ -739,8 +772,11 @@ github.com/voxivoid/recipe-lab · 开放配方数据	github.com/voxivoid/recipe-
 请等待当前录像操作完成后再换胶片	請等待當前錄影操作完成後再換膠片	Wait for the current video operation before changing film	現在の動画操作が終わってからフィルムを切り替えてください	현재 동영상 작업이 끝난 후 필름을 전환하세요
 请等待当前操作完成	請等待當前操作完成	Wait for the current operation to finish	現在の操作の完了をお待ちください	현재 작업이 끝날 때까지 기다리세요
 请返回胶卷库重新进入拍摄	請返回膠捲庫重新進入拍攝	Return to the library and reopen capture	ライブラリに戻って撮影を開き直してください	라이브러리로 돌아가 촬영을 다시 여세요
+读取中	讀取中	Reading…	読み取り中…	읽는 중…
 读取失败 · 	讀取失敗 · 	Read failed · 	読み込み失敗 · 	읽기 실패 · 
 调色	調色	Grade	調色	색보정
+调试	除錯	Debug	デバッグ	디버그
+调试工具	除錯工具	Debug tools	デバッグツール	디버그 도구
 调试连接应用签名不匹配，未执行退出	除錯連線應用簽名不匹配，未執行退出	Debug helper signature mismatch; exit was not performed	デバッグ接続の署名が一致しないため終了しませんでした	디버그 연결 서명이 일치하지 않아 종료하지 않았습니다
 调试连接清理未完成，已停止退出	除錯連線清理未完成，已停止退出	Debug helper cleanup incomplete; exit stopped	デバッグ接続の整理が未完了のため終了を中止しました	디버그 연결 정리가 끝나지 않아 종료를 중단했습니다
 货架	貨架	Shelf	棚	선반
@@ -750,6 +786,9 @@ github.com/voxivoid/recipe-lab · 开放配方数据	github.com/voxivoid/recipe-
 载入中…	載入中…	Loading…	読み込み中…	불러오는 중…
 辅助	輔助	Tools	ツール	도구
 输入范围无效，请检查 DOMAIN_MIN / MAX	輸入範圍無效，請檢查 DOMAIN_MIN / MAX	Invalid input range; check DOMAIN_MIN / MAX	入力範囲が無効です。DOMAIN_MIN / MAXを確認してください	입력 범위가 잘못되었습니다. DOMAIN_MIN / MAX를 확인하세요
+运行中	執行中	Running	実行中	실행 중
+运行中 · 端口 23	執行中 · 埠 23	Running · port 23	実行中 · ポート23	실행 중 · 포트 23
+运行中 · 端口 5555	執行中 · 埠 5555	Running · port 5555	実行中 · ポート5555	실행 중 · 포트 5555
 近似效果差异较大，仍可自由选择使用	近似效果差異較大，仍可自由選擇使用	The approximation differs noticeably, but you may still use it	近似差が大きいですが、使用することはできます	근사 차이가 크지만 계속 사용할 수 있습니다
 近似胶卷	近似膠捲	Approx. film	近似フィルム	근사 필름
 近似胶卷（拟合矩阵，和照片胶卷不完全相同）	近似膠捲（擬合矩陣，和照片膠捲不完全相同）	Approx. film (fitted matrix; not identical to photo film)	近似フィルム（フィットしたマトリクス。写真フィルムとは完全一致しません）	근사 필름 (피팅 매트릭스, 사진 필름과 완전히 같지는 않음)
@@ -791,6 +830,7 @@ github.com/voxivoid/recipe-lab · 开放配方数据	github.com/voxivoid/recipe-
 选相机直接取景 · 相机直出单张 JPEG	選相機直接取景 · 相機直出單張 JPEG	Camera finder · One camera JPEG	カメラのファインダー · カメラJPEG1枚	카메라 파인더 · 카메라 JPEG 한 장
 选相机直接进入取景 · 取景中按 C3 换胶片	選相機直接進入取景 · 取景中按 C3 換膠片	Picking a camera opens the finder · C3 changes film there	カメラを選ぶとファインダーへ · ファインダーでC3を押すとフィルム切替	카메라를 고르면 파인더로 이동 · 파인더에서 C3로 필름 전환
 遇到	遇到	Found 	検出 	발견 
+部分功能不可用：	部分功能不可用：	Some functions are unavailable: 	一部の機能を利用できません：	일부 기능을 사용할 수 없습니다: 
 配套 App 内一键加入相机 Wi-Fi · 首次输入配对码	配套 App 內一鍵加入相機 Wi-Fi · 首次輸入配對碼	Join camera Wi-Fi in one tap in the companion app · Enter the pairing code once	専用アプリでワンタップ接続 · 初回はペアリングコードを入力	전용 앱에서 한 번 눌러 카메라 Wi-Fi 연결 · 처음 한 번 페어링 코드 입력
 配对	配對	Pair	ペアリング	페어링
 配对信息不可用	配對資訊不可用	Pairing information unavailable	ペアリング情報を利用できません	페어링 정보를 사용할 수 없습니다
