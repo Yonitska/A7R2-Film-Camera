@@ -21,14 +21,8 @@ final class AutoPreviewGate {
     private final Listener listener;
     private State state=State.NEW;
     private boolean held;
-    /** a7r2.53 keeps the approximate colour while S1 is held. If the body
-     * rejects the re-armed shutter in that state, the activity turns this off
-     * and the gate falls back to the proven baseline-on-half-press flow. */
-    private boolean keepColorOnHalfPress=true;
     private long generation;
     AutoPreviewGate(Driver driver,Listener listener){this.driver=driver;this.listener=listener;}
-    void keepColorOnHalfPress(boolean value){keepColorOnHalfPress=value;}
-    boolean keepColorOnHalfPress(){return keepColorOnHalfPress;}
     State state(){return state;}
     long generation(){return generation;}
     boolean ready(){return state==State.READY;}
@@ -50,23 +44,8 @@ final class AutoPreviewGate {
         try{
             // A released half-press must not enable a late capture path.
             if(!held){colored();return;}
-            state=State.READY;generation++;driver.enable();
-            listener.ready();
-            // a7r2.53: the direct shutter was armed on the colour baseline,
-            // but the user asked to keep the approximate look in the finder
-            // during half press. Re-apply it now; captureBaseline() restores
-            // the baseline again right before S2 reaches Sony.
-            if(keepColorOnHalfPress)driver.apply();
+            state=State.READY;generation++;driver.enable();listener.ready();
         }catch(Exception e){fail(e);}
-    }
-    /** Restore the original matrix/gamma immediately before the physical S2
-     * event is forwarded, so the stored frame does not inherit the preview
-     * look. Best-effort: a failure is reported through the normal gate path. */
-    void captureBaseline(){
-        if(state!=State.READY)return;
-        if(!keepColorOnHalfPress)return;
-        try{driver.restore();}
-        catch(Exception e){fail(e);}
     }
     boolean shotStarted(){if(state!=State.READY)return false;state=State.CAPTURING;held=false;generation++;return true;}
     void shotFinished(){if(state==State.CAPTURING)returnToPreview();}

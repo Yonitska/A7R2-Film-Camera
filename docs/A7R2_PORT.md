@@ -1596,6 +1596,31 @@ required releasing S1, and recipe mode never left "saving".
   `face_detection_skipped`, `recipe_focus_cancel`, `recipe_take_picture`,
   `recipe_store_scan_found`/`recipe_store_scan_retry`.
 
+### a7r2.55 Revert of the still preview/AF experiments
+
+The a7r2.54 journals showed why the latest build felt worse:
+
+- R002F0A1 repeatedly ran `auto_preview_restore` → `auto_preview_applied` →
+  `auto_preview_capture_ready` → `lut_focus_start`, followed milliseconds later
+  by `focus_canceled origin=half_release`. Each short S1 press started a focus
+  drive and immediately cancelled it; the executor was still being held when a
+  full press arrived, and the cycles also re-applied the preview matrix after
+  the direct shutter had been armed. R003AE19 then entered movie mode with no
+  useful AF, and R004F793 could not focus after returning.
+- a7r2.55 restores the still path to the a7r2.52 code: the original
+  `AutoPreviewGate` (baseline on S1, approximate colour after release/save),
+  no `captureBaseline()`/`keepColorOnHalfPress` re-application, no LUT
+  `autoFocus`/`cancelAutoFocus` on S1, no `s1Held` auto re-arm, and no
+  open/preview `cancelAutoFocus` calls. `AutoPreviewGateTest` is back to the
+  a7r2.52 contract.
+- Kept: the a7r2.53 movie fix (release cancel, callback-less `autoFocus`),
+  the a7r2.52 capture-guard fallback, the close-time AF cancel, and the
+  a7r2.54 recipe isolation (no FaceDetectionController; cancel AF immediately
+  before `takePicture()`).
+- Artifacts: maintainer build `dist/SonyLutTest.apk`, 6,651,697 B, SHA-256
+  `03130a4c5c5397f88c7830adb39e20596fad126fc591f484867ac09a0da58de5`,
+  version `0.9.0-beta.5-a7r2.55` / code 151.
+
 ## Main risks
 
 - Sony `CameraSequence`/`DefaultDevelopFilter` and the 42m map are private

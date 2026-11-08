@@ -106,10 +106,6 @@ public class PreJpegProbeActivity extends Activity implements SurfaceHolder.Call
     private HandlerThread thread;private Handler work;
     private SurfaceHolder holder;private TextView status;
     private Object cameraEx,sequence,filter;private Camera camera;
-    /** Physical S1 state across a capture. The auto-preview gate clears its
-     * own `held` flag when a shot starts; this lets the app re-arm while the
-     * user keeps the half press down for the next shot. */
-    private boolean s1Held;
     private Class<?> cameraType,sequenceType,rawType,imageType;
     private volatile boolean active,prepared,workerActive,destroyed;
     private boolean opening,closed,initOnly;private boolean surfaceAvailable;private String phase,mapPath,initStage,mapRevision,originalPictureSize;private CaptureProfile profile;private boolean uvSwap;private File run,sd;
@@ -655,9 +651,6 @@ public class PreJpegProbeActivity extends Activity implements SurfaceHolder.Call
             try{openType.getMethod("setMovieMode",int.class).invoke(options,0);}catch(Throwable ignored){}
             event("camera_open_begin","preview="+(recipeOpen?"default":"false")+" inherit_setting=default recording_mode=still");loadingStage("正在连接相机",1);cameraEx=cameraType.getMethod("open",int.class,openType).invoke(null,0,options);
             camera=(Camera)cameraType.getMethod("getNormalCamera").invoke(cameraEx);
-            // a7r2.52: drop any focus request the movie session left queued in
-            // the camera service before the still session starts its preview.
-            resetCameraFocus("open");
             Camera.Parameters p=camera.getParameters();Camera.Size size=p.getPictureSize();
             event("camera_parameters","drive="+p.get("drive-mode")+" storage="+p.get("storage-fmt")+" jpeg_quality="+p.get("jpeg-quality")+" size="+(size==null?"null":size.width+"x"+size.height));
             // Read-only state stamp: compares a normal still session with one
@@ -813,11 +806,6 @@ public class PreJpegProbeActivity extends Activity implements SurfaceHolder.Call
             }
             stage("preview_request");
             event("preview_request_begin","");camera.setPreviewDisplay(holder);camera.startPreview();event("preview_request_done","");
-            // a7r2.53: the cancel at open ran before preview and failed on this
-            // body ("cancelAutoFocus failed"). With the preview live, cancel
-            // again so a request inherited from a movie session cannot keep
-            // the AF executor busy when the direct shutter reaches S2.
-            resetCameraFocus("preview");
             stage("preview_returned");
             if(recipeMode()&&recipe!=null){
                 // a7r2.45: treat startPreview() returning as preview-ready, as
@@ -1324,18 +1312,7 @@ public class PreJpegProbeActivity extends Activity implements SurfaceHolder.Call
             }
         },new AutoPreviewGate.Listener(){
             public void colored(){
-                if(gate.state()==PreJpegGate.State.REARMING){
-                    completeRearm(gate.shot());
-                    // a7r2.54: if S1 is still held after a shot, prepare the
-                    // next direct-shutter cycle now. Without this the gate
-                    // stayed in PREVIEW and every S2 was swallowed until the
-                    // user released and pressed the half shutter again.
-                    if(s1Held&&active&&!closed&&!destroyed&&!reviewing
-                            &&autoPreview!=null&&autoPreview.state()==AutoPreviewGate.State.PREVIEW){
-                        event("auto_half_rearm","s1_held=true");
-                        autoPreview.press();
-                    }
-                }
+                if(gate.state()==PreJpegGate.State.REARMING)completeRearm(gate.shot());
                 if(!reviewing&&productHud!=null)productLive();
                 event("auto_preview_ready","state="+gate.state());maybeOpenGallery();
             }
@@ -1347,7 +1324,6 @@ public class PreJpegProbeActivity extends Activity implements SurfaceHolder.Call
                 // direct shutter is ready. UI thread: never block the gate.
                 if(gate.state()==PreJpegGate.State.READY)ui.post(new Runnable(){public void run(){
                     ensureManualCaptureGuard("auto_preview_ready");
-                    startLutFocus("auto_preview_ready");
                 }});
             }
             public void failed(Exception error){failure("automatic_preview",error);}
@@ -1433,38 +1409,20 @@ public class PreJpegProbeActivity extends Activity implements SurfaceHolder.Call
                 productHud.detail="拍摄已取消 · 可重新半按对焦后拍摄";productHud.showLiveHint(productHud.detail);productHud.update();}
             else{status.setText("拍摄已取消 · 可重新拍摄");status.setVisibility(View.VISIBLE);}
             event("shutter_canceled","ready=true filter_preserved=true");
-            if(autoPreview!=null){
-                // If Sony rejected the re-armed shutter while the approximate
-                // matrix was applied, fall back to the proven baseline-on-
-                // half-press flow for the rest of this session.
-                if(autoPreview.keepColorOnHalfPress()){
-                    autoPreview.keepColorOnHalfPress(false);
-                    event("half_color_disabled","reason=shutter_canceled");
-                }
-                autoPreview.shotCanceled();
-            }
+            if(autoPreview!=null)autoPreview.shotCanceled();
             if(manual!=null){manual.releaseCaptureGuard();reassertExposurePreview();}
             maybeOpenGallery();
         }catch(Throwable e){failure("cancel_recovery",e);}
     }
     private void arm(String origin){
         if(recipeMode()){armRecipe(origin);return;}
-        if(gate.state()==PreJpegGate.State.READY&&autoPreview!=null
-                &&autoPreview.state()!=AutoPreviewGate.State.READY){
+        if(gate.state()==PreJpegGate.State.READY&&autoPreview!=null&&!autoPreview.shotStarted()){
             autoPreview.fail(new IOException("shutter before preview baseline barrier: "+origin));return;
         }
         // Finish any queued exposure step before Sony starts the RAW exposure.
         awaitManualControls();
         if(manual!=null)try{event("manual_pre_shot",manual.captureState());}
         catch(Throwable e){event("manual_pre_shot_error",cause(e).toString());}
-        // a7r2.53: the finder kept the approximate matrix during half press.
-        // Return to the colour baseline before this S2 is forwarded to Sony.
-        // captureBaseline() requires READY, so it must run before shotStarted().
-        if(autoPreview!=null&&autoPreview.ready())autoPreview.captureBaseline();
-        if(autoPreview!=null&&autoPreview.state()==AutoPreviewGate.State.FAILED)return;
-        if(gate.state()==PreJpegGate.State.READY&&autoPreview!=null&&!autoPreview.shotStarted()){
-            autoPreview.fail(new IOException("shutter before preview baseline barrier: "+origin));return;
-        }
         if(gate.arm()){
         if(af!=null&&af.active())try{af.confirm();if(productHud!=null)productHud.setAf(true,false,af.x(),af.y());}catch(Throwable e){event("af_confirm_error",cause(e).toString());}
         final long shot=gate.shot();processingProgress.begin(shot);pressAt=SystemClock.elapsedRealtime();timingOrigin=origin;journalAtPress=journalWriteMs();
@@ -2365,41 +2323,6 @@ public class PreJpegProbeActivity extends Activity implements SurfaceHolder.Call
         try{target.cancelAutoFocus();event("focus_canceled","origin="+origin);}
         catch(Throwable e){event("focus_cancel_error","origin="+origin+" "+cause(e));}
     }
-    /** LUT half-press AF. The still path previously never asked the lens to
-     * focus: Sony's direct shutter did it at S2. After a movie session the
-     * vendor AF executor can still be busy, and the direct shutter then times
-     * out (ShutterListener CANCELED 0.6-0.9 s after S2). Start a normal
-     * autoFocus when the gate is ready, after cancelling any inherited
-     * request, and cancel it when S1 is released. Runs on the serialized
-     * control thread so it cannot interleave with the capture guard writes. */
-    private void startLutFocus(final String origin){
-        if(recipeMode())return;
-        final Camera target=camera;
-        if(target==null)return;
-        final Handler handler=controlHandler;
-        Runnable call=new Runnable(){public void run(){
-            if(closed||destroyed||camera!=target)return;
-            long start=SystemClock.elapsedRealtime();
-            try{
-                target.cancelAutoFocus();
-                target.autoFocus(null);
-                event("lut_focus_start",origin+" ms="+(SystemClock.elapsedRealtime()-start));
-            }catch(Throwable e){event("lut_focus_error",origin+" "+cause(e));}
-        }};
-        if(handler!=null)handler.post(call);else call.run();
-    }
-    private void cancelLutFocus(final String origin){
-        if(recipeMode())return;
-        final Camera target=camera;
-        if(target==null)return;
-        final Handler handler=controlHandler;
-        Runnable call=new Runnable(){public void run(){
-            if(camera!=target)return;
-            try{target.cancelAutoFocus();event("focus_canceled","origin="+origin);}
-            catch(Throwable e){event("focus_cancel_error","origin="+origin+" "+cause(e));}
-        }};
-        if(handler!=null)handler.post(call);else call.run();
-    }
     /** Sony's preview display mode can unlock AE. Before the camera is allowed
      * to meter the shot, restore the plain M state and the exact dial values.
      * This runs on the half-press, which precedes the full press. */
@@ -2662,15 +2585,7 @@ public class PreJpegProbeActivity extends Activity implements SurfaceHolder.Call
                 if(gate.state()!=PreJpegGate.State.READY)return true;
             }else{
                 event("auto_preview_key","key="+key+" scan="+scan+" action="+e.getAction()+" state="+autoPreview.state());
-                boolean s1Key=key==516||scan==516||key==517||scan==517||key==KeyEvent.KEYCODE_FOCUS;
-                if(s1Key){
-                    if(e.getAction()==KeyEvent.ACTION_DOWN)s1Held=true;
-                    else if(e.getAction()==KeyEvent.ACTION_UP)s1Held=false;
-                }
                 boolean half=key==516||scan==516||key==KeyEvent.KEYCODE_FOCUS;
-                boolean anyHalfUp=e.getAction()==KeyEvent.ACTION_UP
-                        &&(scan==516||key==516||scan==517||key==517||key==KeyEvent.KEYCODE_FOCUS);
-                if(anyHalfUp)cancelLutFocus("half_release");
                 boolean releaseHalf=key==772||scan==772||(half&&e.getAction()==KeyEvent.ACTION_UP);
                 if(releaseHalf){autoPreview.release();return true;}
                 if(e.getAction()==KeyEvent.ACTION_DOWN&&e.getRepeatCount()==0&&(half||key==518||scan==518||key==KeyEvent.KEYCODE_CAMERA)){

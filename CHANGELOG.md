@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.9.0-beta.5-a7r2.55 — 回退真 LUT 预览/对焦实验，保留录像修复（A7R2 本地测试版）
+
+- a7r2.54 真机日志显示真 LUT 会话在每按半按后反复执行
+  `auto_preview_restore/applied/capture_ready` 和 `lut_focus_start`，紧接着
+  `focus_canceled origin=half_release`；用户短按半按时对焦只启动几毫秒就被取消，
+  AF 执行器被反复占用，随后进入录像和返回拍照都失去对焦。半按期间重新套矩阵
+  还可能导致取景/成片颜色异常。
+- a7r2.55 把真 LUT 路径恢复到 a7r2.52 的稳定行为：
+  - `AutoPreviewGate` 回到“半按恢复原色、松开/拍完再套近似色”，删除
+    `keepColorOnHalfPress`、`captureBaseline()` 和 enable 后重新 apply；
+  - 删除 a7r2.53/.54 的 LUT 半按 `autoFocus`/`cancelAutoFocus`、`s1Held`
+    自动重装和 `auto_half_rearm`；LUT 对焦仍由 Sony 直通快门在 S2 完成；
+  - 删除打开相机时必然失败的 `cancelAutoFocus`（`focus_cancel_error`）和
+    preview 启动后的额外取消；
+  - 保留 a7r2.53 已确认有效的录像修复（S1 松开取消、无回调 `autoFocus(null)`）、
+    a7r2.52 的 capture guard 补齐、关闭相机前的 AF 取消；
+  - 配方模式保留 a7r2.54 的隔离：不创建 `FaceDetectionController`，并在
+    `takePicture()` 前取消 S1 对焦。
+- 版本 `0.9.0-beta.5-a7r2.55` / code 151。本地维护者构建 APK 6,651,697 B，
+  SHA-256 `03130a4c5c5397f88c7830adb39e20596fad126fc591f484867ac09a0da58de5`。
+  本版为本地测试签名，不对外分发。
+  真机验证：真 LUT 第一张/第二张颜色与对焦正常 → 录像对焦 → 返回真 LUT 对焦
+  → 配方保存。若配方仍卡在保存中，请提供新的 `PROBE.JSN`。
+
 ## 0.9.0-beta.5-a7r2.54 — 按住半按连拍与配方保存（A7R2 本地测试版）
 
 - 真 LUT 第二张必须松开半按才能继续：第一张拍摄开始时

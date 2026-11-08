@@ -1,4 +1,4 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="org.hongen.sonylutprobe" android:versionCode="150" android:versionName="0.9.0-beta.5-a7r2.54">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="org.hongen.sonylutprobe" android:versionCode="151" android:versionName="0.9.0-beta.5-a7r2.55">
   <uses-sdk android:minSdkVersion="10" android:targetSdkVersion="10" />
   <uses-permission android:name="android.permission.CAMERA" />
   <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />

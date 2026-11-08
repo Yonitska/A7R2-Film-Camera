@@ -9,7 +9,7 @@
 
 > 当前发行候选：**v0.9.0-beta.5**。上游实测机型为 **Sony A6300 / 固件 2.01**。完整 LUT 用于成片；流畅取景使用矩阵与 Gamma 近似，半按快门时恢复原色。当前发布状态见 [发行记录](docs/RELEASE.md)。
 >
-> 本仓库同时包含 **A7R2 本地移植增强 `0.9.0-beta.5-a7r2.54`**（ILCE-7RM2 / 42MP，本地测试签名，不对外分发）及配套手机 App **SonyLutRemote 1.0**。功能、构建和真机验证边界见 [A7R2 移植记录](docs/A7R2_PORT.md) 与 [手机传片说明](phone/README.md)。
+> 本仓库同时包含 **A7R2 本地移植增强 `0.9.0-beta.5-a7r2.55`**（ILCE-7RM2 / 42MP，本地测试签名，不对外分发）及配套手机 App **SonyLutRemote 1.0**。功能、构建和真机验证边界见 [A7R2 移植记录](docs/A7R2_PORT.md) 与 [手机传片说明](phone/README.md)。
 
 ## 原作者与开源
 
