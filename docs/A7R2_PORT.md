@@ -1672,6 +1672,29 @@ missing, and the desired split is AF-C for video / half-press for photos.
   SHA-256 `ec5d2ac7154fdca960a6cac8dc35505decd577f5937217342e7bc83230de1fb3`,
   version `0.9.0-beta.5-a7r2.57` / code 153.
 
+### a7r2.58 Recipe store scan: slow writes and size fallback
+
+a7r2.57 fixed true-LUT photos and movie AF; recipe photos still showed
+"writing" with no file. R0065F71/R007063F show `takePicture` returning in
+8–17 ms, then 15 s of `recipe_store_scan_retry` and a miss. Two scanner
+assumptions could hide a real file: the 15 s window and the exact
+7952×5304 header check.
+
+- The recipe scan now runs for 30 s and continues after the UI watchdog has
+  returned the gate to READY. `verifyRecipeStore` already supports a late
+  store; a late recipe JPEG is catalogued instead of discarded.
+- Any new DCIM JPEG with a valid SOF header is accepted; if its dimensions
+  differ from the profile, `recipe_store_size_mismatch` records actual vs.
+  expected and the file is still saved.
+- `PhotoFiles.jpegSize()` parses the main-image dimensions; `jpegHeader()`
+  is now a size comparison on top of it.
+- Artifacts: maintainer build `dist/SonyLutTest.apk`, 6,651,670 B, SHA-256
+  `0b9f38023b768d24ecd7130a97cb5343df07ed2c9eb1e4d5e8bf6ecdc7208354`,
+  version `0.9.0-beta.5-a7r2.58` / code 154. If recipe still fails, check
+  whether a new JPEG exists in DCIM and attach `recipe_store_scan_*` and
+  `recipe_store_size_mismatch`; a file in DCIM proves the scan/receipt path
+  is at fault, while no file means the camera ignored `takePicture`.
+
 ## Main risks
 
 - Sony `CameraSequence`/`DefaultDevelopFilter` and the 42m map are private

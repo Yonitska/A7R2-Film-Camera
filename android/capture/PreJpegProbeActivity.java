@@ -171,7 +171,7 @@ public class PreJpegProbeActivity extends Activity implements SurfaceHolder.Call
     // 42 MP JPEGs can take longer to appear on a busy card. The scan now waits
     // up to 15 s (still inside the 20 s recovery window); the live write chip
     // makes this wait visible without the old darkroom page.
-    private static final long RECIPE_SCAN_TOTAL_MS=15000L;
+    private static final long RECIPE_SCAN_TOTAL_MS=30000L;
     private static final long RECIPE_SCAN_STABLE_MS=400L;
     // DCIM JPEGs present before the shot. Without a store callback the scan
     // must distinguish our new file by name, not only by the card's mtime
@@ -1658,7 +1658,7 @@ public class PreJpegProbeActivity extends Activity implements SurfaceHolder.Call
                         long modified=f.lastModified();
                         if(modified<recipePressWall-4000L||modified>System.currentTimeMillis()+60000L)continue;
                     }
-                    if(!PhotoFiles.jpegHeader(f,profile.width,profile.height))continue;
+                    if(PhotoFiles.jpegSize(f)==null)continue;
                     long modified=f.lastModified();
                     if(found==null||modified>newest){newest=modified;found=f;}
                 }
@@ -1675,7 +1675,11 @@ public class PreJpegProbeActivity extends Activity implements SurfaceHolder.Call
      * from the pre-shot baseline, keep a stable size for one beat (the camera
      * may still be appending entropy data), and carry a valid JPEG header. */
     private void scanRecipeStore(final long shot,final long startedAt){
-        if(closed||gate.shot()!=shot||gate.state()!=PreJpegGate.State.ARMED)return;
+        // a7r2.58: keep scanning after the UI watchdog has returned the finder
+        // to READY. A late 42MP camera JPEG is still catalogued (verifyRecipeStore
+        // has a late-store path) instead of being lost when the write is slow.
+        if(closed||gate.shot()!=shot)return;
+        if(gate.state()!=PreJpegGate.State.ARMED&&gate.state()!=PreJpegGate.State.READY)return;
         stage("store_scan_begin");
         final File found=findRecipeStoreCandidate();
         if(found==null){
@@ -1717,8 +1721,13 @@ public class PreJpegProbeActivity extends Activity implements SurfaceHolder.Call
             throw new IOException("unexpected recipe store in "+gate.state()+" shot="+gate.shot()+" want="+shot);
         long checkBegin=SystemClock.elapsedRealtime();
         photoFiles.confirmStored(directory,name);File file=photoFiles.pollReady(true);
-        if(file==null||!PhotoFiles.jpegHeader(file,profile.width,profile.height))
+        if(file==null)throw new IOException("completed recipe JPEG missing: "+directory+name);
+        int[] actualSize=PhotoFiles.jpegSize(file);
+        if(actualSize==null)
             throw new IOException("completed recipe JPEG header missing or invalid: "+directory+name);
+        if(actualSize[0]!=profile.width||actualSize[1]!=profile.height)
+            event("recipe_store_size_mismatch","file="+file+" actual="+actualSize[0]+"x"+actualSize[1]
+                    +" expected="+profile.width+"x"+profile.height);
         stage("store_header_ok "+name);
         long checkedAt=SystemClock.elapsedRealtime(),savedAt=SystemClock.elapsedRealtime();
         photoFiles.accepted(file);recipeFile=file;

@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.9.0-beta.5-a7r2.58 — 配方照片慢写入与尺寸兜底（A7R2 本地测试版）
+
+- 配方模式仍能对焦，但拍完一直停在保存：R0065F71/R007063F 中
+  `takePicture` 8–17 ms 返回，15 秒 DCIM 扫描没有找到新文件。除了相机确实
+  未写盘的可能，也可能是新文件晚于 15 秒出现，或 JPEG 不是预期的
+  7952×5304 而被扫描器过滤。
+- a7r2.58：
+  - 配方扫描从 15 秒延长到 30 秒；
+  - UI 超时恢复实时取景后，扫描仍继续；迟到的文件会按 late store 路径
+    保存并记录，不再直接丢弃；
+  - 不再要求新 JPEG 必须是 7952×5304；只要 JPEG/SOF 头有效就接收，尺寸不符
+    记录 `recipe_store_size_mismatch`（实际尺寸/期望尺寸），照片仍然保存；
+  - `PhotoFiles` 新增 `jpegSize()`，`jpegHeader()` 改为基于它。
+- 版本 `0.9.0-beta.5-a7r2.58` / code 154。本地维护者构建 APK 6,651,670 B，
+  SHA-256 `0b9f38023b768d24ecd7130a97cb5343df07ed2c9eb1e4d5e8bf6ecdc7208354`。
+  本版为本地测试签名，不对外分发。
+  真机验证：配方拍 1–2 张，确认是否保存；若仍失败，请检查 SD 卡 DCIM 是否
+  出现新 JPEG，并回传 `recipe_store_scan_*`/`recipe_store_size_mismatch` 日志。
+
 ## 0.9.0-beta.5-a7r2.57 — 录像 AFC-only、照片半按对焦、录像停止状态机（A7R2 本地测试版）
 
 - **录像只使用相机自己的 AFC**：删除 `standbyAfc`、S1 半按 `autoFocus`、AF 点确认/录制开始的

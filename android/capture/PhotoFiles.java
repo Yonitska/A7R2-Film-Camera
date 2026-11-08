@@ -99,20 +99,31 @@ final class PhotoFiles {
     // Fast structural check after Sony's completed-store event. Full entropy/EOI
     // validation can follow first-frame display without stalling the pipeline.
     static boolean jpegHeader(File file,int width,int height)throws IOException{
+        int[] size=jpegSize(file);
+        return size!=null&&size[0]==width&&size[1]==height;
+    }
+    /** Main image dimensions, or null when the JPEG/SOF header is not valid.
+     * Recipe mode uses any camera-native JPEG the body actually wrote, even if
+     * a firmware change made it a different size than the profile expects. */
+    static int[] jpegSize(File file)throws IOException{
         HeaderReader in=new HeaderReader(file);try{
-            long size=in.length();if(size<4||in.readUnsignedShort()!=0xffd8)return false;
+            long size=in.length();if(size<4||in.readUnsignedShort()!=0xffd8)return null;
             while(in.getFilePointer()<Math.min(size,1024*1024)){
-                if(in.read()!=255)return false;int marker;do{marker=in.read();}while(marker==255);
-                if(marker<0||marker==0||marker==216||marker==217||marker==218)return false;
-                int bytes=in.readUnsignedShort();if(bytes<2||in.getFilePointer()+bytes-2>size)return false;
+                if(in.read()!=255)return null;int marker;do{marker=in.read();}while(marker==255);
+                if(marker<0||marker==0||marker==216||marker==217||marker==218)return null;
+                int bytes=in.readUnsignedShort();if(bytes<2||in.getFilePointer()+bytes-2>size)return null;
                 if(marker==192||marker==194){
-                    if(bytes!=17)return false;
-                    return in.read()==8&&in.readUnsignedShort()==height&&in.readUnsignedShort()==width&&in.read()==3;
+                    if(bytes!=17)return null;
+                    if(in.read()!=8)return null;
+                    int height=in.readUnsignedShort();
+                    int width=in.readUnsignedShort();
+                    if(in.read()!=3||width<=0||height<=0)return null;
+                    return new int[]{width,height};
                 }
                 in.seek(in.getFilePointer()+bytes-2);
             }
-            return false;
-        }catch(EOFException e){return false;}finally{in.close();}
+            return null;
+        }catch(EOFException e){return null;}finally{in.close();}
     }
     // Sony routes SD operations through its filesystem service. Reading each
     // marker byte separately adds many remote calls to every saved-photo check.
