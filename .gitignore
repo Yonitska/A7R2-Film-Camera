@@ -1,0 +1,44 @@
+# Local evidence, device data, SDKs and generated artifacts
+/out/
+/dist/
+/results/
+/archives/
+/vendor/
+/.venv*/
+/HANDOFF.md
+/docs/history/
+/src/
+/probes/
+/SONYLUT/
+/baselines/
+/LUTDIAG/
+/port-diag/
+/LUTS/
+/local-assets/
+/POSE/
+/2026-*-this-session-*.txt
+__pycache__/
+*.py[cod]
+.DS_Store
+*.log
+*.apk
+*.keystore
+*.jks
+*.p12
+*.pfx
+*.pem
+.env
+.env.*
+NET.CFG
+wpa_supplicant.conf
+local.properties
+
+# Sample LUTs and the pose pack are not cleared for public redistribution.
+# Keep them in local-assets/ for local builds; the public tree ships an empty
+# catalog and no pose data.
+/android-assets/*.CUB
+/android-assets/POSE.JSN
+/android-assets/POSE.TTF
+/android-assets/POSE-NOTICE.md
+/android-assets/POSE-PROVENANCE.csv
+/android-assets/POSE-FONT-OFL.txt

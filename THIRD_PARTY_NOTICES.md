@@ -1,0 +1,27 @@
+# Third-party materials
+
+Original project code is GPL-3.0-only (see `LICENSE`). Third-party code and assets retain their own notices and terms; see `ASSET_LICENSES.md` for bundled photographic resources.
+
+- **Recipe Lab / 配方实验室** (v1.11.1): approximate film-recipe data (77 recipes across 12 camera groups) imported into `android/recipe/RecipeData.java`. Upstream: <https://github.com/voxivoid/recipe-lab>, GPL-3.0, © 2026 André Domingues. The upstream GPL-3.0 additional term requires preserving this attribution in source and interactive notices: **Based on Recipe Lab by André Domingues**. This project re-implements the recipe-to-camera-parameter mapping independently in Java; no Recipe Lab application code, UI artwork, or preview images are copied. Recipe names and parameter values are derived from the upstream recipe data.
+- **ShotDirector / 拍摄导演台** (Wi-Fi Direct connection sequence): the A7R2 camera-side `WifiDirectHost` follows the publicly observed `DirectManager` enable/startGo sequence documented by ShotDirector. ShotDirector is MIT-licensed, © 2026 ShotDirector contributors. Its MIT permission notice is reproduced here:
+
+  > Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+  >
+  > The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+  >
+  > THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+  ShotDirector's posing-card data (`data/`, `camera/assets/default_pack.json`, `phone/assets/pose_sample.json`) is explicitly excluded from that MIT license and is not relicensed by this project. **No pose data or pose images are included in this public repository**; the maintainer's local overlay keeps them untracked and they are not part of any public source or binary distribution. The phone-transfer implementation does not copy pose data or ShotDirector application code. **NanoHTTPD is not used**: the transfer HTTP server is an original pure-Java implementation.
+- **Film Studio / 胶片工坊** and **M-Film / HNGSeries**: used only to observe camera API behavior and interaction design. Neither project's code, smali, artwork, preview images nor resources were copied into this project. Film Studio is PolyForm Noncommercial with a proprietary Sony base; M-Film is GPL-2.0. The face-detection implementation here is a clean-room reflection of the two observed `CameraEx$ParametersModifier` entry points and draws no overlay.
+- **Noto Sans SC + Noto Sans KR subset**: `android-assets/UIFONT.TTF`, merged for Simplified/Traditional Chinese, Japanese and Korean, source identities in `FONTINFO.json`; SIL Open Font License in `FONT-OFL.txt` and notice in `FONT-NOTICE.md`, included in APKs.
+- **OpenMemories Tweak Java bridge**: `dev-connect/src/com/github/ma1co/openmemories/tweak/`; MIT, full notice in `dev-connect/assets/OpenMemories-Tweak-LICENSE.txt`. Original JNI naming and attribution retained. The connector is development-only and not included in the main release APK.
+- **libjpeg-turbo 2.1.5.1**: pinned in `dependencies.lock.json`; IJG/BSD/zlib terms are detailed by upstream `LICENSE.md` and `README.ijg`, both packaged with the application. Source is available from the pinned upstream commit and release source bundle.
+- **GNU STL runtime from NDK r16b**: runtime notice is included as `GNU-STL-NOTICE.txt`; the runtime uses the GCC runtime library exception. The NDK is an external build tool, not committed here.
+- **Sony PictureEffectPlus memory configuration**: external 1,860-byte data file, pinned upstream revision and digest in `dependencies.lock.json`. Upstream has no license file at the audited revision. No rights are claimed or granted here. This notice records the resource provenance; the publication workflow is documented in `docs/RELEASE.md`.
+- **Sony A7R II 42m memory configuration** (local port only): 1,980-byte Sony firmware data file extracted from the user's ILCE-7RM2 on 2026-11-01; provenance and digest in `vendor/sony-a7r2-memmap/SOURCE.md`. No rights are claimed or granted. This resource is bundled only in the local A7R II test APK and is not part of the upstream public release. See `docs/A7R2_PORT.md`.
+- **Reference photograph**: the maintainer-requested derivative `android-assets/PREVIEW.JPG` is described separately in `ASSET_LICENSES.md`.
+- **Sample LUTs**: the ten maintainer-selected `.CUB` files are not part of the
+  public repository because their redistribution terms are unconfirmed. The
+  public `android-assets/CATALOG.JSN` is empty; users can import their own
+  `.cube` files on the camera's SD card. `local-assets/` is untracked.
+- **Synthetic fixtures**: test LUTs and identity preview parameters are generated mathematically by project scripts; generated diagnostic profiles remain development-only.

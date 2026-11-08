@@ -1,0 +1,207 @@
+package org.hongen.sonylutprobe;
+
+import java.io.*;
+import java.security.MessageDigest;
+import java.util.*;
+
+/** Immutable, content-addressed imports. An entry is published only after
+ * the exact staged bytes pass the same parser used by the capture engine.
+ * Uses uppercase DOS 8.3 paths for Sony SD storage. ENTRY.DAT is the commit
+ * marker: incomplete imports never appear in the library. */
+final class LutLibrary {
+    interface Verifier { int inspect(File file) throws Exception; }
+    static final long MAX_BYTES=64L*1024*1024;
+    static final class Entry {
+        final String id,name,source; final int size; final File file;
+        Entry(String id,String name,String source,int size,File file){this.id=id;this.name=name;this.source=source;this.size=size;this.file=file;}
+    }
+    static final class Imported {
+        final Entry entry; final boolean added;
+        Imported(Entry entry,boolean added){this.entry=entry;this.added=added;}
+    }
+    private final File root;
+    LutLibrary(File root)throws IOException {this.root=root.getCanonicalFile();directoryNote(this.root,"FORMAT.INI","format=1\ncontent=A7R2 Film Camera managed LUTs\n");}
+    static void ensureDirectory(File dir)throws IOException {if(!dir.isDirectory()&&!dir.mkdirs())throw new IOException("无法创建存储目录");}
+    static void directoryNote(File dir,String name,String text)throws IOException {
+        ensureDirectory(dir);File file=new File(dir,name);if(file.exists())return;
+        if(!file.createNewFile())throw new IOException("无法初始化存储目录");
+        OutputStream out=new FileOutputStream(file);try{out.write(text.getBytes("UTF-8"));out.flush();}finally{out.close();}
+    }
+    static String label(String text){
+        if(text==null)return "未命名胶卷";
+        String clean=text.replaceAll("[\\p{Cntrl}]"," ").trim();
+        if(clean.length()==0)return "未命名胶卷";
+        return clean.length()>80?clean.substring(0,80):clean;
+    }
+    static boolean cubeFile(File f){String n=f.getName().toLowerCase(Locale.US);return f.isFile()&&(n.endsWith(".cube")||n.endsWith(".cub"));}
+    static List<File> scan(File folder)throws IOException {return scan(folder,null);}
+    /** Scan the top level, then one nested level if the user copied a whole
+     * LUTS folder into LUTS. The report is written by the UI for field
+     * diagnosis: Sony's FuFsys can hide externally added files until remount. */
+    static List<File> scan(File folder,StringBuilder report)throws IOException {
+        ensureDirectory(folder);
+        if(report!=null)report.append("path=").append(folder.getAbsolutePath())
+                .append(" canonical=").append(folder.getCanonicalPath())
+                .append(" exists=").append(folder.exists())
+                .append(" dir=").append(folder.isDirectory())
+                .append(" canRead=").append(folder.canRead()).append('\n');
+        File base=folder.getCanonicalFile();
+        List<File> result=new ArrayList<File>();Set<String> seen=new HashSet<String>();
+        File[] files=list(folder,report,true);
+        collectCubes(files,base,result,seen,report);
+        if(result.isEmpty()&&files!=null){
+            for(File dir:files)if(dir.isDirectory()&&!dir.getName().startsWith(".")){
+                if(report!=null)report.append("nested=").append(dir.getAbsolutePath()).append('\n');
+                collectCubes(list(dir,report,false),base,result,seen,report);
+                if(!result.isEmpty())break;
+            }
+        }
+        Collections.sort(result,new Comparator<File>(){public int compare(File a,File b){return a.getName().compareToIgnoreCase(b.getName());}});
+        if(report!=null)report.append("result=").append(result.size()).append('\n');
+        return result;
+    }
+    private static File[] list(File dir,StringBuilder report,boolean createNote)throws IOException {
+        if(report!=null)report.append("dir=").append(dir.getAbsolutePath())
+                .append(" exists=").append(dir.exists()).append(" canRead=").append(dir.canRead()).append('\n');
+        File[] files=dir.listFiles();
+        if(files==null&&createNote){
+            // Sony FuFsys returns null for a valid, empty directory. A useful
+            // note makes enumeration unambiguous; genuine IO errors still fail.
+            directoryNote(dir,"README.TXT","A7R2 Film Camera: copy 3D .cube / .cub files into this directory.\nSony FuFsys requires 8.3 uppercase ASCII names, e.g. NEUTRAL.CUB.\nSource files are preserved on import.\n");
+            files=dir.listFiles();
+        }
+        if(files==null){
+            if(report!=null)report.append("list=null\n");
+            if(createNote)throw new IOException("无法读取 SD 卡 LUTS 文件夹");
+            return null;
+        }
+        if(report!=null)report.append("list=").append(files.length).append('\n');
+        return files;
+    }
+    private static void collectCubes(File[] files,File base,List<File> result,Set<String> seen,StringBuilder report){
+        if(files==null)return;
+        for(File file:files){
+            String canonical=null,include="";
+            if(cubeFile(file))try{
+                canonical=file.getCanonicalPath();
+                // Keep imports inside the LUTS tree; a symlink must not escape.
+                if(canonical.startsWith(base.getPath()+File.separator)){
+                    if(seen.add(canonical)){result.add(file);include="yes";}
+                    else include="duplicate";
+                }else include="outside";
+            }catch(IOException e){include="error:"+e.getMessage();}
+            if(report!=null)report.append("  ").append(file.getName())
+                    .append(" file=").append(file.isFile()).append(" size=").append(file.length())
+                    .append(canonical==null?"":" canonical="+canonical)
+                    .append(include.length()==0?"":" include="+include).append('\n');
+        }
+    }
+    synchronized Imported importFile(File input,String displayName,String source,Verifier verifier)throws Exception {
+        if(!input.isFile()||input.length()==0||input.length()>MAX_BYTES)throw new IOException("文件为空或超过 64 MB");
+        File stage=new File(root,shortId());if(!stage.mkdir())throw new IOException("无法创建胶卷导入目录");
+        boolean committed=false;
+        try{
+            File cube=new File(stage,"TABLE.CUB");MessageDigest digest=MessageDigest.getInstance("SHA-256");
+            InputStream in=new FileInputStream(input);try{
+                OutputStream out=new FileOutputStream(cube);try{
+                    byte[] buffer=new byte[32768];long total=0;int n;
+                    while((n=in.read(buffer))!=-1){total+=n;if(total>MAX_BYTES)throw new IOException("文件超过 64 MB");out.write(buffer,0,n);digest.update(buffer,0,n);}
+                    out.flush();
+                }finally{out.close();}
+            }finally{in.close();}
+            String id=hex(digest.digest());Entry existing=find(id);
+            if(existing!=null)return new Imported(existing,false);
+            int size=verifier.inspect(cube);if(size<2||size>65)throw new IOException("不支持的 3D LUT 阶数");
+            String name=displayName==null?title(cube,input.getName()):label(displayName);
+            Properties p=new Properties();p.setProperty("id",id);p.setProperty("name",name);p.setProperty("source",label(source));p.setProperty("size",Integer.toString(size));
+            File pending=new File(stage,"ENTRY.TMP");writeProperties(pending,p);
+            if(!pending.renameTo(new File(stage,"ENTRY.DAT")))throw new IOException("导入未完成：无法保存胶卷");
+            committed=true;return new Imported(new Entry(id,name,label(source),size,cube),true);
+        }finally{if(!committed)removeStage(stage);}
+    }
+    private static String shortId(){return "L"+UUID.randomUUID().toString().replace("-","").substring(0,7).toUpperCase(Locale.US);}
+    private static final class Choice {final long generation;final String id;final int slot;Choice(long g,String i,int s){generation=g;id=i;slot=s;}}
+    private Choice choice()throws IOException {
+        Choice latest=null;for(int i=0;i<2;i++){File f=new File(root,i==0?"LASTA.CFG":"LASTB.CFG");if(!f.isFile())continue;
+            Properties p=readProperties(f);try{long g=Long.parseLong(p.getProperty("generation","-1"));String id=p.getProperty("id","");
+                if(g>=0&&id.matches("[0-9a-f]{64}")&&(latest==null||g>latest.generation))latest=new Choice(g,id,i);
+            }catch(NumberFormatException ignored){/* interrupted/corrupt slot; the other slot remains valid */}}
+        return latest;
+    }
+    synchronized String selectedId()throws IOException {Choice c=choice();return c==null?null:c.id;}
+    synchronized void select(String id)throws IOException {
+        if(find(id)==null)throw new IOException("选择的胶卷不存在");Choice old=choice();
+        if(old!=null&&old.id.equals(id))return;
+        File next=new File(root,old==null||old.slot==1?"LASTA.CFG":"LASTB.CFG"),temp=new File(root,"CHOICE.TMP");
+        Properties p=new Properties();p.setProperty("id",id);p.setProperty("generation",Long.toString(old==null?0:old.generation+1));
+        try{writeProperties(temp,p);if(next.exists()&&!next.delete())throw new IOException("无法保存当前胶卷");
+            if(!temp.renameTo(next))throw new IOException("无法保存当前胶卷");}finally{temp.delete();}
+    }
+    synchronized Entry find(String id)throws IOException {
+        if(id==null||!id.matches("[0-9a-f]{64}"))return null;
+        for(Entry entry:entries())if(entry.id.equals(id))return entry;return null;
+    }
+    private static boolean retiredSample(String id) {
+        return "06ceaf85781931e6e1d54007d148435a367a579375aeb2de3f881daca9abc743".equals(id)
+            || "a3ea0238d24b77daa43745137696aa81dffe3f1d5b44e9cb87f4e1c5d85e7f6a".equals(id);
+    }
+    /** Retire only the two former mathematical samples, including on upgrades.
+     * Rename the commit marker first so interrupted cleanup cannot expose a
+     * partial entry; retain the retirement marker until cleanup can be retried. */
+    synchronized void retireBuiltinSamples(File builtinCache)throws IOException {
+        File[] dirs=root.listFiles();if(dirs==null)throw new IOException("无法读取胶卷库");
+        for(File dir:dirs){
+            dir=dir.getCanonicalFile();
+            if(!dir.getName().matches("L[0-9A-F]{7}")||!root.equals(dir.getParentFile()))continue;
+            File marker=new File(dir,"RETIRED.DAT"),meta=new File(dir,"ENTRY.DAT");
+            if(marker.isFile()){
+                if(!retiredSample(readProperties(marker).getProperty("id")))continue;
+            }else{
+                Entry entry=read(dir);if(entry==null||!retiredSample(entry.id))continue;
+                if(!meta.renameTo(marker))throw new IOException("无法移除旧示例胶卷");
+            }
+            File[] files=dir.listFiles();if(files==null)throw new IOException("无法清理旧示例胶卷");
+            for(File file:files)if(!file.equals(marker)&&!file.delete())throw new IOException("无法清理旧示例胶卷");
+            if(!marker.delete()||!dir.delete())throw new IOException("无法清理旧示例胶卷");
+        }
+        for(String name:new String[]{"COLOR33.CUB","IDENT33.CUB"}){
+            File file=new File(builtinCache,name);
+            if(file.exists()&&!file.delete())throw new IOException("无法清理旧示例胶卷 源缓存");
+        }
+    }
+    private Entry read(File directory)throws IOException {
+        directory=directory.getCanonicalFile();
+        if(!directory.getName().matches("L[0-9A-F]{7}")||!root.equals(directory.getParentFile()))return null;
+        File meta=new File(directory,"ENTRY.DAT"),cube=new File(directory,"TABLE.CUB");
+        if(!meta.isFile()||!cube.isFile())return null;
+        Properties p=readProperties(meta);int size;
+        try{size=Integer.parseInt(p.getProperty("size","0"));}catch(NumberFormatException e){throw new IOException("胶卷索引损坏");}
+        String id=p.getProperty("id","");if(!id.matches("[0-9a-f]{64}")||size<2||size>65)throw new IOException("胶卷索引损坏");
+        return new Entry(id,label(p.getProperty("name")),label(p.getProperty("source")),size,cube);
+    }
+    synchronized List<Entry> entries()throws IOException {
+        File[] dirs=root.listFiles();if(dirs==null)throw new IOException("无法读取胶卷库");
+        List<Entry> entries=new ArrayList<Entry>();for(File dir:dirs){Entry entry=read(dir);if(entry!=null)entries.add(entry);}
+        Collections.sort(entries,new Comparator<Entry>(){public int compare(Entry a,Entry b){return a.name.compareToIgnoreCase(b.name);}});return entries;
+    }
+    private static String title(File file,String fallback)throws IOException {
+        BufferedReader reader=new BufferedReader(new InputStreamReader(new FileInputStream(file),"UTF-8"));
+        try{for(int i=0;i<64;i++){String line=reader.readLine();if(line==null)break;line=line.replace("\ufeff","").trim();
+            if(line.startsWith("TITLE ")||line.startsWith("TITLE\t")){
+                String name=line.substring(5).trim();
+                if(name.startsWith("\"")&&name.lastIndexOf('"')>0)name=name.substring(1,name.lastIndexOf('"'));
+                String lower=name.toLowerCase(Locale.US);
+                // Resolve and several exporters write the same boilerplate
+                // TITLE for every LUT. Prefer the user's 8.3 file name then.
+                if(lower.length()==0||lower.contains("generated by resolve")||lower.contains("untitled")
+                        ||lower.equals("lut")||lower.equals("3d lut"))break;
+                return label(name);
+            }
+        }}finally{reader.close();}
+        return label(fallback.replaceFirst("(?i)\\.(cube|cub)$",""));
+    }
+    static Properties readProperties(File file)throws IOException {Properties p=new Properties();InputStream in=new FileInputStream(file);try{p.load(in);}finally{in.close();}return p;}
+    static void writeProperties(File file,Properties p)throws IOException {OutputStream out=new FileOutputStream(file);try{p.store(out,null);out.flush();}finally{out.close();}}
+    static String hex(byte[] bytes){StringBuilder s=new StringBuilder();for(byte b:bytes)s.append(String.format(Locale.US,"%02x",b&255));return s.toString();}
+    private static void removeStage(File stage){if(!stage.exists())return;File[] files=stage.listFiles();if(files!=null)for(File f:files)f.delete();stage.delete();}
+}

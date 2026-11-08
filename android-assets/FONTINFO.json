@@ -1,0 +1,11 @@
+{
+  "source_sc_sha256": "d68bafcb48a2707749396aa12bbbd833cb70401f3a9a689fd2902c7e0d295964",
+  "source_sc_commit": "f8d157532fbfaeda587e826d4cd5b21a49186f7c",
+  "source_kr_sha256": "84e2b8acadd0a01af9f0de6b0a2d29117fb5b0eabd7c2f8353d9d2da0461d5fa",
+  "source_kr_url": "https://fonts.gstatic.com/s/notosanskr/v40/PbyxFmXiEBPT4ITbgNA5Cgms3VYcOA-vvnIzzuoyeLQ.ttf",
+  "format": "static TrueType",
+  "coverage": "zh-CN zh-TW ja ko + Latin/GB2312",
+  "glyphs": 8369,
+  "bytes": 2398124,
+  "sha256": "06aaf8107c9633c245be44e793e54ddb8a7c01554ecef7b7af7d90c412de861e"
+}
