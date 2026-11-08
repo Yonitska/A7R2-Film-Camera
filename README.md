@@ -62,7 +62,8 @@ approximation of the recipe, not a full LUT.
 ## Known issues
 
 These are the current, user-reported problems. They are not fixed yet unless a
-later release note says otherwise.
+later release note says otherwise. See [docs/KNOWN_ISSUES.md](docs/KNOWN_ISSUES.md)
+for the report/diagnostic checklist.
 
 1. **The shutter can hang after a photo.** After one shot the camera may appear
    stuck; pressing the shutter again is required to continue.
