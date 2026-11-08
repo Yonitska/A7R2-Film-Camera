@@ -7,7 +7,7 @@ captures, offers a camera-native "film recipe" mode, records video, and replaces
 the usual Sony interface with a film-shelf / darkroom UI.
 
 > **Status: beta, unfinished, and not affiliated with Sony.** The current source
-> version is `0.9.0-beta.5-a7r2.60`; local builds use a test key. The port has
+> version is `0.9.0-beta.5-a7r2.64`; local builds use a test key. The port has
 > only ever been tested on an ILCE-7RM2 running firmware 4.01, and hardware
 > validation of the latest build is still in progress. It is not a polished
 > product. Read [Known issues](#known-issues) before installing it.
