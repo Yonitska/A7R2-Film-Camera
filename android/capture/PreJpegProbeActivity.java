@@ -106,6 +106,10 @@ public class PreJpegProbeActivity extends Activity implements SurfaceHolder.Call
     private HandlerThread thread;private Handler work;
     private SurfaceHolder holder;private TextView status;
     private Object cameraEx,sequence,filter;private Camera camera;
+    /** Physical S1 state across a capture. The auto-preview gate clears its
+     * own `held` flag when a shot starts; this lets the app re-arm while the
+     * user keeps the half press down for the next shot. */
+    private boolean s1Held;
     private Class<?> cameraType,sequenceType,rawType,imageType;
     private volatile boolean active,prepared,workerActive,destroyed;
     private boolean opening,closed,initOnly;private boolean surfaceAvailable;private String phase,mapPath,initStage,mapRevision,originalPictureSize;private CaptureProfile profile;private boolean uvSwap;private File run,sd;
@@ -782,19 +786,29 @@ public class PreJpegProbeActivity extends Activity implements SurfaceHolder.Call
                 else event("recipe_preview_apply_skipped","name="+recipe.name);
             }
             if(productUi()){
-                // Native face-priority AF and the vendor face frame only. No
-                // FaceDetectionListener is registered, so a vendor callback can
-                // never enter and freeze this Activity's UI thread.
-                try{
-                    faceDetection=new FaceDetectionController(cameraEx,camera,
-                        getIntent().getBooleanExtra("face_detection",false),sd,
-                        new FaceDetectionController.Log(){public void event(String name,String detail){
-                            PreJpegProbeActivity.this.event(name,detail);
-                        }});
-                    faceDetection.apply(recipeMode()?"recipe":"lut");
-                }catch(Throwable faceError){
-                    faceDetection=null;
-                    event("face_detection_unavailable",cause(faceError).toString());
+                // a7r2.54: no face-detection controller in recipe mode. The
+                // recipe path is a bare camera.takePicture() transaction; the
+                // extra ParametersModifier calls correlated with a returned
+                // takePicture that never wrote a file (R00805E1). Keep the
+                // recipe path free of vendor extras.
+                if(recipeMode()){
+                    if(getIntent().getBooleanExtra("face_detection",false))
+                        event("face_detection_skipped","reason=recipe_capture_safety");
+                }else{
+                    // Native face-priority AF only. No FaceDetectionListener is
+                    // registered, so a vendor callback can never enter and
+                    // freeze this Activity's UI thread.
+                    try{
+                        faceDetection=new FaceDetectionController(cameraEx,camera,
+                            getIntent().getBooleanExtra("face_detection",false),sd,
+                            new FaceDetectionController.Log(){public void event(String name,String detail){
+                                PreJpegProbeActivity.this.event(name,detail);
+                            }});
+                        faceDetection.apply("lut");
+                    }catch(Throwable faceError){
+                        faceDetection=null;
+                        event("face_detection_unavailable",cause(faceError).toString());
+                    }
                 }
             }
             stage("preview_request");
@@ -1310,7 +1324,18 @@ public class PreJpegProbeActivity extends Activity implements SurfaceHolder.Call
             }
         },new AutoPreviewGate.Listener(){
             public void colored(){
-                if(gate.state()==PreJpegGate.State.REARMING)completeRearm(gate.shot());
+                if(gate.state()==PreJpegGate.State.REARMING){
+                    completeRearm(gate.shot());
+                    // a7r2.54: if S1 is still held after a shot, prepare the
+                    // next direct-shutter cycle now. Without this the gate
+                    // stayed in PREVIEW and every S2 was swallowed until the
+                    // user released and pressed the half shutter again.
+                    if(s1Held&&active&&!closed&&!destroyed&&!reviewing
+                            &&autoPreview!=null&&autoPreview.state()==AutoPreviewGate.State.PREVIEW){
+                        event("auto_half_rearm","s1_held=true");
+                        autoPreview.press();
+                    }
+                }
                 if(!reviewing&&productHud!=null)productLive();
                 event("auto_preview_ready","state="+gate.state());maybeOpenGallery();
             }
@@ -1536,6 +1561,13 @@ public class PreJpegProbeActivity extends Activity implements SurfaceHolder.Call
             final long callBegin=SystemClock.elapsedRealtime();
             try{
                 stage("take_picture_begin");
+                // a7r2.54: do not enter Sony's still JPEG transaction while a
+                // recipe S1 autoFocus is still driving. The native sequence
+                // expects S1 to be released or its focus request to be idle;
+                // an in-flight request made takePicture() return in ~16 ms
+                // without writing a file (R00805E1).
+                try{target.cancelAutoFocus();event("recipe_focus_cancel","before_take_picture");}
+                catch(Throwable focusError){event("recipe_focus_cancel_error",focusError.toString());}
                 target.takePicture(null,null,null);
                 event("recipe_take_picture","call_ms="+(SystemClock.elapsedRealtime()-callBegin)
                         +" state="+gate.state()+" thread="+Thread.currentThread().getName());
@@ -2630,6 +2662,11 @@ public class PreJpegProbeActivity extends Activity implements SurfaceHolder.Call
                 if(gate.state()!=PreJpegGate.State.READY)return true;
             }else{
                 event("auto_preview_key","key="+key+" scan="+scan+" action="+e.getAction()+" state="+autoPreview.state());
+                boolean s1Key=key==516||scan==516||key==517||scan==517||key==KeyEvent.KEYCODE_FOCUS;
+                if(s1Key){
+                    if(e.getAction()==KeyEvent.ACTION_DOWN)s1Held=true;
+                    else if(e.getAction()==KeyEvent.ACTION_UP)s1Held=false;
+                }
                 boolean half=key==516||scan==516||key==KeyEvent.KEYCODE_FOCUS;
                 boolean anyHalfUp=e.getAction()==KeyEvent.ACTION_UP
                         &&(scan==516||key==516||scan==517||key==517||key==KeyEvent.KEYCODE_FOCUS);

@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.9.0-beta.5-a7r2.54 — 按住半按连拍与配方保存（A7R2 本地测试版）
+
+- 真 LUT 第二张必须松开半按才能继续：第一张拍摄开始时
+  `AutoPreviewGate.shotStarted()` 会把内部的 `held` 清成 false，拍完回到
+  PREVIEW 后不会自动重新准备；用户一直按住 S1 时，下一次 S2 会被门控吞掉。
+  a7r2.54 在按键层单独记录物理 S1 状态（`s1Held`），保存完成、彩色预览恢复后
+  若 S1 仍按着，就自动 `autoPreview.press()` 重新恢复基线、重启预览并
+  `startDirectShutter`（日志 `auto_half_rearm`）。用户不必松开半按再按。
+- 配方模式一直显示“正在保存图片”：成功与失败的旧日志对比显示，失败的
+  R00805E1 是唯一带 `face_detection_applied origin=recipe` 的配方会话；而
+  a7r2.45 的配方路径一直刻意不注册任何厂商扩展。a7r2.54 在配方模式完全跳过
+  `FaceDetectionController`（日志 `face_detection_skipped reason=recipe_capture_safety`），
+  并在 `takePicture()` 前取消仍在进行的 S1 自动对焦（`recipe_focus_cancel`）。
+  这两处都针对“takePicture 立即返回但 DCIM 永远不出现文件”。
+- 版本 `0.9.0-beta.5-a7r2.54` / code 150。本地维护者构建 APK 6,652,630 B，
+  SHA-256 `a10ba74a5059249f632d9bf760777dd2806c762491150649ef7ab8c2b379cfae`。
+  本版为本地测试签名，不对外分发。
+  真机验证：真 LUT 按住半按连拍 3 张（不松开 S1）→ 配方模式连拍 2 张并确认
+  `recipe_store_scan_found`/`recipe_saved`。日志重点：`auto_half_rearm`、
+  `face_detection_skipped`、`recipe_focus_cancel`、`recipe_take_picture`、
+  `recipe_store_scan_retry`。
+
 ## 0.9.0-beta.5-a7r2.53 — 录像 AF 释放、录像后拍照与半按近似取景（A7R2 本地测试版）
 
 - **a7r2.52 的 S1 松开取消没有真正执行。** `VideoActivity.dispatchKeyEvent()` 在

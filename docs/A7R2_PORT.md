@@ -1563,6 +1563,39 @@ asset set; see `README.md`. Device check: LUT stills with the
 finder staying approximate during half press → movie standby/record half-press
 AF → return → LUT stills in S and M → recipe stills; copy the run journals.
 
+### a7r2.54 Half-press hold between LUT shots and recipe save
+
+The a7r2.53 device check: movie AF now works, but a second true-LUT shot
+required releasing S1, and recipe mode never left "saving".
+
+- **S1-held shots.** `AutoPreviewGate.shotStarted()` clears the gate's `held`
+  flag. After the first shot the gate returns to PREVIEW, so with the user
+  still holding S1 the next S2 was swallowed and only a release + new half
+  press prepared another capture. a7r2.54 tracks the physical S1 state in
+  `PreJpegProbeActivity.s1Held` (scan 516/517/FOCUS down/up). When the
+  post-save colour preview returns and S1 is still down, it calls
+  `autoPreview.press()` to restore the baseline, restart the preview and arm
+  `startDirectShutter` again (`auto_half_rearm`). Releasing S1 during that
+  preparation still cancels it through the normal `held` check.
+- **Recipe save.** Comparing the last good recipe sessions (R0086C2B,
+  R00D2E03: `recipe_store_scan_found` at ~3.6 s) with the failing
+  R00805E1 shows the failing session is the only one carrying
+  `face_detection_applied origin=recipe`; it logged `takePicture call_ms=16`
+  and then no DCIM file. The recipe path is a bare `takePicture()`
+  transaction and previously avoided every extra vendor call. a7r2.54 skips
+  `FaceDetectionController` entirely for recipes
+  (`face_detection_skipped reason=recipe_capture_safety`) and calls
+  `cancelAutoFocus()` immediately before `takePicture()`
+  (`recipe_focus_cancel`) so an S1 focus drive cannot hold the JPEG
+  transaction.
+- **Artifacts.** Maintainer build `dist/SonyLutTest.apk`, 6,652,630 B,
+  SHA-256 `a10ba74a5059249f632d9bf760777dd2806c762491150649ef7ab8c2b379cfae`,
+  version `0.9.0-beta.5-a7r2.54` / code 150. Device check: hold S1 and take
+  three true-LUT shots without releasing it; then take at least two recipe
+  shots and confirm `recipe_saved`. Journals to attach: `auto_half_rearm`,
+  `face_detection_skipped`, `recipe_focus_cancel`, `recipe_take_picture`,
+  `recipe_store_scan_found`/`recipe_store_scan_retry`.
+
 ## Main risks
 
 - Sony `CameraSequence`/`DefaultDevelopFilter` and the 42m map are private
