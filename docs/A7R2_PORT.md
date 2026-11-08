@@ -1621,6 +1621,32 @@ The a7r2.54 journals showed why the latest build felt worse:
   `03130a4c5c5397f88c7830adb39e20596fad126fc591f484867ac09a0da58de5`,
   version `0.9.0-beta.5-a7r2.55` / code 151.
 
+### a7r2.56 Remove face-detection vendor calls and let movie AF run
+
+The a7r2.55 journals still showed recipe `takePicture()` returning in 15 ms with
+no DCIM file (R00A758F, R00B6651), and movie standby/half-press focus being
+cancelled right after S1 release (R008F892). The failing recipe sessions all
+followed code that had instantiated `FaceDetectionController` in an earlier
+still session; the last known-good recipe sessions (R0086C2B/R00D2E03, a7r2.45)
+predate that feature.
+
+a7r2.56 therefore does not instantiate the face-detection controller at all.
+The menu toggle remains, but every still/movie session logs
+`face_detection_skipped reason=stability` and performs no Sony face parameter
+call. Recipe capture returns to the bare `takePicture(null,null,null)` path
+(the pre-takePicture `cancelAutoFocus` is removed), and movie AF no longer
+cancels on S1 release: the request has time to run, and the next half press
+replaces it. A focus pulse is issued when a clip actually starts recording
+(`record_start`).
+
+Artifacts: maintainer build `dist/SonyLutTest.apk`, 6,651,491 B, SHA-256
+`1851067f29f1afd406df5ab84d3b797307ad533f01fc15f97731a1b02155b95f`,
+version `0.9.0-beta.5-a7r2.56` / code 152. **Power-cycle the camera after
+installing** so the camera service starts without old face/AF state, then test:
+true LUT two shots, movie standby/record focus, return to LUT, recipe two
+shots. Attach `camera_focus_state`, `face_detection_skipped`, `video_focus_*`,
+`recipe_take_picture`, and `recipe_store_scan_*`.
+
 ## Main risks
 
 - Sony `CameraSequence`/`DefaultDevelopFilter` and the 42m map are private

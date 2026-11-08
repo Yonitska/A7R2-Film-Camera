@@ -778,32 +778,14 @@ public class PreJpegProbeActivity extends Activity implements SurfaceHolder.Call
                 if(applyRecipeLook(recipe,"startup_preview"))appliedRecipeId=recipeId;
                 else event("recipe_preview_apply_skipped","name="+recipe.name);
             }
-            if(productUi()){
-                // a7r2.54: no face-detection controller in recipe mode. The
-                // recipe path is a bare camera.takePicture() transaction; the
-                // extra ParametersModifier calls correlated with a returned
-                // takePicture that never wrote a file (R00805E1). Keep the
-                // recipe path free of vendor extras.
-                if(recipeMode()){
-                    if(getIntent().getBooleanExtra("face_detection",false))
-                        event("face_detection_skipped","reason=recipe_capture_safety");
-                }else{
-                    // Native face-priority AF only. No FaceDetectionListener is
-                    // registered, so a vendor callback can never enter and
-                    // freeze this Activity's UI thread.
-                    try{
-                        faceDetection=new FaceDetectionController(cameraEx,camera,
-                            getIntent().getBooleanExtra("face_detection",false),sd,
-                            new FaceDetectionController.Log(){public void event(String name,String detail){
-                                PreJpegProbeActivity.this.event(name,detail);
-                            }});
-                        faceDetection.apply("lut");
-                    }catch(Throwable faceError){
-                        faceDetection=null;
-                        event("face_detection_unavailable",cause(faceError).toString());
-                    }
-                }
-            }
+            // a7r2.56: the face-detection controller is not instantiated at
+            // all. Recipe sessions stopped writing files after it was added
+            // (a7r2.50), and the successful a7r2.45 recipe path never touched
+            // these vendor parameters. Keep the still/movie session free of
+            // the extra ParametersModifier calls until recipe and movie AF are
+            // stable again; the menu remains but is recorded as skipped.
+            if(productUi()&&getIntent().getBooleanExtra("face_detection",false))
+                event("face_detection_skipped","reason=stability");
             stage("preview_request");
             event("preview_request_begin","");camera.setPreviewDisplay(holder);camera.startPreview();event("preview_request_done","");
             stage("preview_returned");
@@ -1519,13 +1501,6 @@ public class PreJpegProbeActivity extends Activity implements SurfaceHolder.Call
             final long callBegin=SystemClock.elapsedRealtime();
             try{
                 stage("take_picture_begin");
-                // a7r2.54: do not enter Sony's still JPEG transaction while a
-                // recipe S1 autoFocus is still driving. The native sequence
-                // expects S1 to be released or its focus request to be idle;
-                // an in-flight request made takePicture() return in ~16 ms
-                // without writing a file (R00805E1).
-                try{target.cancelAutoFocus();event("recipe_focus_cancel","before_take_picture");}
-                catch(Throwable focusError){event("recipe_focus_cancel_error",focusError.toString());}
                 target.takePicture(null,null,null);
                 event("recipe_take_picture","call_ms="+(SystemClock.elapsedRealtime()-callBegin)
                         +" state="+gate.state()+" thread="+Thread.currentThread().getName());

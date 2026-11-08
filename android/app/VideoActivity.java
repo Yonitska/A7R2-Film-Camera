@@ -364,6 +364,9 @@ public final class VideoActivity extends Activity implements SurfaceHolder.Callb
                     hud.setRecording(true);hud.setSaving(false);
                     hud.setState("录像中",profileLabel(),"快门 停止 · 方向键 切换焦点 · MENU 设置");
                     event("recording_started","profile="+profileLabel());ui.removeCallbacks(tick);ui.post(tick);
+                    // Re-arm the movie AF once the clip is live; some A7R II
+                    // sessions stop the finder AF drive at start().
+                    triggerVideoFocus("record_start");
                 }});
                 else if("onStopped".equals(name))ui.post(new Runnable(){public void run(){
                     recording=false;ui.removeCallbacks(tick);hud.setAf(false,false,0,0);hud.setRecording(false);
@@ -692,13 +695,11 @@ public final class VideoActivity extends Activity implements SurfaceHolder.Callb
             if(focusPending){
                 long age=now-focusPendingAt;
                 boolean reclaim;
-                if(!quiet&&focusQuiet){
-                    // A user half press always wins over the standby loop.
+                if(!quiet){
+                    // a7r2.56: every user half press gets a fresh drive. S1
+                    // release no longer cancels, so the previous request has
+                    // had the time between presses to focus; replace it now.
                     reclaim=true;
-                }else if(!quiet){
-                    // A request the vendor never completed must not block AF
-                    // for the rest of the session.
-                    reclaim=age>=2600;
                 }else{
                     // The standby loop may only replace its own request, and
                     // never the user's half-press.
@@ -1212,14 +1213,12 @@ public final class VideoActivity extends Activity implements SurfaceHolder.Callb
         // It was previously logged as video_key_unhandled; treat it exactly
         // like the shutter's full press so it starts and stops recording.
         boolean recordButton=scan==515||key==515;
-        // a7r2.53: release S1 *before* the generic ACTION_UP return below.
-        // a7r2.52 only cancelled in the half-press branch at the end of this
-        // method, but every ACTION_UP already returned at the top, so the
-        // vendor focus request stayed in flight and the next half press was
-        // dropped. This is the ShotDirector (MIT) S1 flow: autoFocus on down,
-        // cancelAutoFocus on up.
+        // a7r2.56: do not cancel the focus drive when S1 is released. The
+        // request needs time to complete; the next half press replaces it.
+        // (a7r2.53 cancelled here, which left short taps with no focus at
+        // all; a7r2.52's cancel was below the generic UP return and never ran.)
         if(halfShutter&&e.getAction()==KeyEvent.ACTION_UP&&!filmSelecting)
-            cancelVideoFocus("half_release");
+            event("video_focus_release","half_up");
         if(af!=null&&af.active()){
             if(e.getAction()!=KeyEvent.ACTION_DOWN)return true;
             if(action==UiKeys.UP){af.move(0,-1);hud.setAf(true,true,af.x(),af.y());return true;}

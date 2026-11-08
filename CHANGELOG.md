@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.9.0-beta.5-a7r2.56 — 移除人脸检测厂商调用，录像 AF 改为不随 S1 取消（A7R2 本地测试版）
+
+- 配方模式在 a7r2.45（人脸检测加入前）可正常写入；a7r2.50 起所有失败的配方
+  会话都与 `FaceDetectionController` 的厂商调用同时出现。a7r2.56 **不再实例化
+  该控制器**（LUT/配方都一样），菜单开关只记录
+  `face_detection_skipped reason=stability`，不再触碰 Sony 人脸检测参数。
+  这是为了恢复配方 `takePicture()` 和共享 AF 执行器的稳定状态。
+- 录像 AF：S1 松开不再 `cancelAutoFocus`，避免一次短按把刚启动的对焦立刻取消；
+  下一次半按会先取消旧请求再重新驱动。开始录像时额外触发一次
+  `triggerVideoFocus("record_start")`，防止 movie engine 在 start() 后停止对焦。
+- 配方模式删除 `takePicture()` 前的 `cancelAutoFocus`，恢复 a7r2.45 的裸
+  `takePicture` 路径。
+- 版本 `0.9.0-beta.5-a7r2.56` / code 152。本地维护者构建 APK 6,651,491 B，
+  SHA-256 `1851067f29f1afd406df5ab84d3b797307ad533f01fc15f97731a1b02155b95f`。
+  安装后请**相机关机再开机**，让
+  相机服务清掉旧的人脸/对焦状态，再测试。真机验证：真 LUT 连续两张 → 录像
+  待机半按/录制中对焦 → 返回真 LUT → 配方连拍两张并确认文件。
+
 ## 0.9.0-beta.5-a7r2.55 — 回退真 LUT 预览/对焦实验，保留录像修复（A7R2 本地测试版）
 
 - a7r2.54 真机日志显示真 LUT 会话在每按半按后反复执行
