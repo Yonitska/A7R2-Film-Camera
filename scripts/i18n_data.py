@@ -759,6 +759,10 @@ add("正在停止并返回", "Stopping and returning", "停止して戻ってい
 add("正在保存并返回", "Saving and returning", "保存して戻っています", "저장 후 돌아가는 중")
 add("正在关闭录像接口", "Closing video interface", "動画インターフェースを閉じています",
     "동영상 인터페이스 닫는 중")
+add("停止超时 · 已释放录像接口", "Stop timeout · Video interface released",
+    "停止タイムアウト · 動画インターフェースを解放", "중지 시간 초과 · 동영상 인터페이스 해제됨")
+add("录像接口已释放", "Video interface released", "動画インターフェースを解放",
+    "동영상 인터페이스 해제됨")
 add("请稍候，视频保存完成后返回拍照", "Please wait; returning to photo after the video is saved",
     "お待ちください。保存後に写真へ戻ります", "기다려 주세요. 동영상 저장 후 사진으로 돌아갑니다")
 add("请稍候，随后返回拍照", "Please wait; returning to photo shortly", "お待ちください。まもなく写真へ戻ります",

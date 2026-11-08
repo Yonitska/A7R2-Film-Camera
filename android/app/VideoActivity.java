@@ -45,14 +45,10 @@ public final class VideoActivity extends Activity implements SurfaceHolder.Callb
     private final List<Object> recorderProxies=new ArrayList<Object>();
     private AfPointController af;
     private final AfPointController.Log afLog=new AfPointController.Log(){public void log(String name,String detail){event(name,detail);}};
-    /** Guards the standby focus loop so a new camera request is not queued
-     * while the previous one is still running. */
-    private volatile boolean standbyFocusBusy;
-    /** a7r2.52: one Camera.autoFocus request in flight at a time. The body
-     * emits two scan codes per S1 press and its movie executor never calls
-     * back for an overlapping request, which is what left movie AF dead. */
+    /** a7r2.57: movie AF is the camera's own AF-C; the app no longer issues
+     * Camera.autoFocus requests. The fields below only track the cancel that
+     * runs before the movie session is released. */
     private volatile boolean exitRequested;
-    private boolean focusPending,focusQuiet;private long focusPendingAt,lastHalfFocusAt;private int focusGeneration;
 
     private String lutId,mediaId;private LutLibrary.Entry lutEntry;
     private boolean recipeMode;private RecipeData.Recipe recipe;private String recipeCameraName="";private RecipeCameraLook recipeLook;
@@ -72,6 +68,10 @@ public final class VideoActivity extends Activity implements SurfaceHolder.Callb
     private int startRetries;
 
     private volatile boolean active,opening,opened,closed,destroyed,exiting,recording,saving,prepared,preparing,starting,exitAfterSave,streamCompleted;
+    /** a7r2.57 stop state machine: a stop pressed during recorder start is
+     * remembered and applied as soon as onStarted arrives. */
+    private volatile boolean stopAfterStart;
+    private int stopGeneration;
     /** When the recorder last reported ready; the movie engine starts preparing
      * asynchronously, so it must not be released immediately after that. */
     private volatile long preparedAt;private boolean exitAfterPrepare;private int exitWaitTicks;
@@ -85,16 +85,6 @@ public final class VideoActivity extends Activity implements SurfaceHolder.Callb
         if(!recording||hud==null)return;
         hud.setSeconds((int)((SystemClock.elapsedRealtime()-recStartedAt)/1000));
         ui.postDelayed(this,500);
-    }};
-    /** The A7R II's movie engine starts AFC while a clip is recording, but in
-     * standby it stays at the last lock. Re-arm the camera's one-shot AF on a
-     * short cadence so the finder keeps focusing before the shutter is hit. */
-    private final Runnable standbyAfc=new Runnable(){public void run(){
-        if(closed||destroyed)return;
-        boolean idle=active&&opened&&!opening&&!recording&&!saving&&!preparing&&!starting&&!exiting&&!exitRequested
-                &&hud!=null&&!hud.menuOpen&&!filmSelecting&&af!=null&&!af.active()&&!standbyFocusBusy;
-        if(idle)triggerVideoFocus("standby_afc",true);
-        ui.postDelayed(this,1600);
     }};
 
     @Override public void onCreate(Bundle state){
@@ -144,7 +134,7 @@ public final class VideoActivity extends Activity implements SurfaceHolder.Callb
                     if(af!=null)hud.setAf(true,false,af.x(),af.y());
                     refreshFilmStatus();
                     hud.setState("正在准备录像格式","","请稍候");
-                    ui.removeCallbacks(standbyAfc);ui.postDelayed(standbyAfc,900);
+                    
                 }});
             }catch(Throwable e){
                 opening=false;
@@ -361,14 +351,18 @@ public final class VideoActivity extends Activity implements SurfaceHolder.Callb
             public void call(String name,Object[] args){
                 if("onStarted".equals(name))ui.post(new Runnable(){public void run(){
                     starting=false;recording=true;saving=false;streamCompleted=false;prepared=true;startRetries=0;recStartedAt=SystemClock.elapsedRealtime();
+                    stopGeneration++;
                     hud.setRecording(true);hud.setSaving(false);
                     hud.setState("录像中",profileLabel(),"快门 停止 · 方向键 切换焦点 · MENU 设置");
                     event("recording_started","profile="+profileLabel());ui.removeCallbacks(tick);ui.post(tick);
-                    // Re-arm the movie AF once the clip is live; some A7R II
-                    // sessions stop the finder AF drive at start().
-                    triggerVideoFocus("record_start");
+                    if(stopAfterStart){
+                        stopAfterStart=false;
+                        event("video_stop_after_start","");
+                        stopRecording();
+                    }
                 }});
                 else if("onStopped".equals(name))ui.post(new Runnable(){public void run(){
+                    stopGeneration++;
                     recording=false;ui.removeCallbacks(tick);hud.setAf(false,false,0,0);hud.setRecording(false);
                     if(!streamCompleted){saving=true;hud.setSaving(true);
                         hud.setState("正在保存视频",profileLabel(),"请稍候，保存完成后可再次录制");}
@@ -380,6 +374,7 @@ public final class VideoActivity extends Activity implements SurfaceHolder.Callb
                 if("onCompleted".equals(name)){
                     event("stream_write_completed","");
                     ui.post(new Runnable(){public void run(){
+                        stopGeneration++;
                         saving=false;prepared=false;recording=false;preparing=true;streamCompleted=true;ui.removeCallbacks(tick);
                         hud.setSaving(false);hud.setRecording(false);
                         if(exitAfterSave){exitAfterSave=false;exitToPhoto();return;}
@@ -397,6 +392,7 @@ public final class VideoActivity extends Activity implements SurfaceHolder.Callb
                 final int code=args!=null&&args.length>0&&args[0] instanceof Integer?(Integer)args[0]:-1;
                 event("recorder_error","code="+code);
                 ui.post(new Runnable(){public void run(){
+                    stopGeneration++;
                     recording=false;saving=false;starting=false;ui.removeCallbacks(tick);hud.setRecording(false);hud.setSaving(false);
                     hud.setError("录像错误 "+code);hud.setState("录像待机",profileLabel(),"可重试或按 ← 返回拍照");
                 }});
@@ -669,77 +665,11 @@ public final class VideoActivity extends Activity implements SurfaceHolder.Callb
         if("mf".equals(value))return "MF 手动";
         return value.toUpperCase(java.util.Locale.US);
     }
-    /** Movie mode inherits the movie AF mode, but a half press must ask the
-     * camera to run a focus cycle. Sony's own executor uses Camera.autoFocus. */
-    private void triggerVideoFocus(final String origin){triggerVideoFocus(origin,false);}
-    private void triggerVideoFocus(final String origin,final boolean quiet){
-        work.post(new Runnable(){public void run(){
-            if(closed||camera==null||exitRequested)return;
-            if(quiet){
-                if(recording||saving||preparing||starting||exiting||hud==null||hud.menuOpen
-                        ||(af!=null&&af.active()))return;
-                if(standbyFocusBusy)return;
-            }else{
-                long now=SystemClock.elapsedRealtime();
-                // One S1 press reaches this app as scan 516 and scan 517. The
-                // A7R II movie executor accepts a single request; the second,
-                // overlapping autoFocus never ran and never called back. Only
-                // merge while the first request is still pending, so a real
-                // second half press after S1 release is not swallowed.
-                if(focusPending&&now-lastHalfFocusAt<450){
-                    event("video_focus_merged",origin+" since_ms="+(now-lastHalfFocusAt));return;
-                }
-                lastHalfFocusAt=now;
-            }
-            long now=SystemClock.elapsedRealtime();
-            if(focusPending){
-                long age=now-focusPendingAt;
-                boolean reclaim;
-                if(!quiet){
-                    // a7r2.56: every user half press gets a fresh drive. S1
-                    // release no longer cancels, so the previous request has
-                    // had the time between presses to focus; replace it now.
-                    reclaim=true;
-                }else{
-                    // The standby loop may only replace its own request, and
-                    // never the user's half-press.
-                    reclaim=focusQuiet&&age>=1400;
-                }
-                if(!reclaim){
-                    event("video_focus_skipped",origin+" age_ms="+age+" quiet_pending="+focusQuiet);return;
-                }
-                focusGeneration++;focusPending=false;
-                try{camera.cancelAutoFocus();event("video_focus_cancel_stale",origin+" age_ms="+age);}
-                catch(Throwable e){event("video_focus_cancel_error",root(e).toString());}
-            }
-            focusPending=true;focusQuiet=quiet;focusPendingAt=now;
-            final int generation=++focusGeneration;
-            if(quiet){
-                standbyFocusBusy=true;
-                // Some Sony camera builds do not invoke the callback for a
-                // cancelled/queued AF request; never let the loops wedge.
-                ui.postDelayed(new Runnable(){public void run(){standbyFocusBusy=false;}},2600);
-            }
-            try{
-                // ShotDirector (MIT) uses the callback-less form on this body;
-                // the A7R II's movie wrapper never delivered autoFocus()
-                // callbacks in R00685E2 (11 requests, 0 results), so do not
-                // depend on them. The S1 release / stale timer clears pending.
-                event("video_focus_begin",origin);
-                camera.autoFocus(null);
-            }catch(Throwable e){
-                if(generation==focusGeneration)focusPending=false;
-                if(quiet)standbyFocusBusy=false;
-                event("video_focus_error",root(e).toString());
-            }
-        }});
-    }
     /** Cancel a request the vendor still holds. Called before the movie
-     * session restores its parameters; otherwise the queued focus can survive
+     * session restores its parameters; otherwise a queued focus can survive
      * into the next still session and leave the shutter unarmable. */
     private void cancelVideoFocus(String origin){
         if(camera==null)return;
-        focusGeneration++;focusPending=false;
         try{camera.cancelAutoFocus();event("video_focus_canceled",origin);}
         catch(Throwable e){event("video_focus_cancel_error",origin+" "+root(e).toString());}
     }
@@ -902,7 +832,7 @@ public final class VideoActivity extends Activity implements SurfaceHolder.Callb
     private void startRecording(){
         if(closed||exiting||opening||saving||recording||starting)return;
         if(af!=null&&af.active())try{
-            af.confirm();hud.setAf(true,false,af.x(),af.y());triggerVideoFocus("record_af_confirm");}
+            af.confirm();hud.setAf(true,false,af.x(),af.y());}
         catch(Throwable e){hud.setError("对焦点确认失败："+root(e).getMessage());return;}
         starting=true;streamCompleted=false;
         if(preparing||!prepared){starting=false;hud.setState("正在准备录像格式",profileLabel(),"请稍候");return;}
@@ -930,7 +860,16 @@ public final class VideoActivity extends Activity implements SurfaceHolder.Callb
         }
     }
     private void stopRecording(){
+        if(closed||exiting)return;
+        if(starting&&!recording){
+            // The key can arrive between start() and onStarted(). Remember it
+            // and stop as soon as the recorder reports that it started.
+            stopAfterStart=true;
+            event("video_stop_deferred","starting=true");
+            return;
+        }
         if(!recording||saving)return;
+        final int token=++stopGeneration;
         ui.post(new Runnable(){public void run(){
             saving=true;hud.setSaving(true);hud.setState("正在停止并保存",profileLabel(),"");
         }});
@@ -940,6 +879,33 @@ public final class VideoActivity extends Activity implements SurfaceHolder.Callb
                 call(recorder,"stop",new Class<?>[]{});
                 event("stop_return","");
             }catch(Throwable e){fail("stop",e);}
+        }});
+        // A7R2 occasionally misses onStopped/onCompleted after a 4K stop.
+        // Retry the stop once, then release the movie interface so the body
+        // cannot stay wedged in "saving" forever.
+        ui.postDelayed(new Runnable(){public void run(){stopWatchdog(token,1);}},6000);
+    }
+    private void stopWatchdog(final int token,final int attempt){
+        if(closed||exiting||token!=stopGeneration)return;
+        if(!recording&&!saving)return;
+        event("video_stop_watchdog","attempt="+attempt+" recording="+recording
+                +" saving="+saving+" starting="+starting);
+        if(attempt==1){
+            if(recording&&!saving){stopRecording();return;}
+            ui.postDelayed(new Runnable(){public void run(){stopWatchdog(token,2);}},6000);
+            return;
+        }
+        event("video_stop_timeout","forced_release");
+        work.post(new Runnable(){public void run(){
+            try{releaseRecorder();}catch(Throwable ignored){}
+            ui.post(new Runnable(){public void run(){
+                stopGeneration++;
+                recording=false;saving=false;starting=false;prepared=false;
+                ui.removeCallbacks(tick);hud.setRecording(false);hud.setSaving(false);
+                hud.setError("停止超时 · 已释放录像接口");
+                hud.setState("录像接口已释放",profileLabel(),"按 ← 返回拍照");
+                event("video_stop_forced","");
+            }});
         }});
     }
 
@@ -1077,7 +1043,7 @@ public final class VideoActivity extends Activity implements SurfaceHolder.Callb
         // leaves. A standby request fired 271 ms before release in R00685E2
         // and was still queued when the still process opened the camera.
         exitRequested=true;
-        ui.removeCallbacks(standbyAfc);
+        
         if(recording){
             exitAfterSave=true;hud.setError("");
             hud.setState("正在停止并返回","","请稍候，视频保存完成后返回拍照");
@@ -1116,7 +1082,7 @@ public final class VideoActivity extends Activity implements SurfaceHolder.Callb
         if(exiting)return;
         exiting=true;hud.setState("正在关闭录像接口","","");
         event("video_exit_release","prepared="+prepared+" settle_done=true");
-        ui.removeCallbacks(tick);ui.removeCallbacks(standbyAfc);
+        ui.removeCallbacks(tick);
         work.post(new Runnable(){public void run(){
             releaseEverything();
             // Give the camera service time to tear down the movie engine before
@@ -1213,12 +1179,9 @@ public final class VideoActivity extends Activity implements SurfaceHolder.Callb
         // It was previously logged as video_key_unhandled; treat it exactly
         // like the shutter's full press so it starts and stops recording.
         boolean recordButton=scan==515||key==515;
-        // a7r2.56: do not cancel the focus drive when S1 is released. The
-        // request needs time to complete; the next half press replaces it.
-        // (a7r2.53 cancelled here, which left short taps with no focus at
-        // all; a7r2.52's cancel was below the generic UP return and never ran.)
-        if(halfShutter&&e.getAction()==KeyEvent.ACTION_UP&&!filmSelecting)
-            event("video_focus_release","half_up");
+        // a7r2.57: movie focus is the camera's own AF-C. S1 is consumed so it
+        // cannot start a one-shot request; the arrow keys only move the
+        // flexible-spot point and AF-C refocuses there.
         if(af!=null&&af.active()){
             if(e.getAction()!=KeyEvent.ACTION_DOWN)return true;
             if(action==UiKeys.UP){af.move(0,-1);hud.setAf(true,true,af.x(),af.y());return true;}
@@ -1228,7 +1191,7 @@ public final class VideoActivity extends Activity implements SurfaceHolder.Callb
             if(action==UiKeys.OK){
                 try{af.confirm();hud.setAf(true,false,af.x(),af.y());
                     event("video_af_confirm","x="+af.x()+" y="+af.y());
-                    triggerVideoFocus("af_confirm");}
+                    }
                 catch(Throwable x){hud.setError("对焦点确认失败："+root(x).getMessage());}
                 return true;
             }
@@ -1240,14 +1203,11 @@ public final class VideoActivity extends Activity implements SurfaceHolder.Callb
             }
             if(fullShutter||recordButton){
                 try{af.confirm();hud.setAf(true,false,af.x(),af.y());
-                    triggerVideoFocus("af_shutter_confirm");toggleRecording();}
+                    toggleRecording();}
                 catch(Throwable x){hud.setError("对焦点确认失败："+root(x).getMessage());}
                 return true;
             }
-            if(halfShutter){
-                if(e.getAction()==KeyEvent.ACTION_DOWN)triggerVideoFocus("af_half_press");
-                return true;
-            }
+            if(halfShutter)return true;
             return true;
         }
         if(hud.menuOpen){
@@ -1312,10 +1272,7 @@ public final class VideoActivity extends Activity implements SurfaceHolder.Callb
         if(recordButton){event("video_record_key","scan="+scan);toggleRecording();return true;}
         if(fullShutter){toggleRecording();return true;}
         if(action==UiKeys.OK)return true; // centre button never records; shutter only
-        if(halfShutter){ // focused by a one-shot camera request, never a still shutter
-            if(e.getAction()==KeyEvent.ACTION_DOWN)triggerVideoFocus("half_press");
-            return true;
-        }
+        if(halfShutter)return true; // AF-C owns movie focus; S1 is not a still shutter
         if(action==UiKeys.UP||action==UiKeys.DOWN||action==UiKeys.RIGHT||dial!=0||control!=0)return true;
         event("video_key_unhandled","key="+key+" scan="+scan);
         return true;
@@ -1329,10 +1286,10 @@ public final class VideoActivity extends Activity implements SurfaceHolder.Callb
     private void toggleRecording(){if(recording)stopRecording();else startRecording();}
 
     @Override protected void onResume(){super.onResume();active=true;if(holder!=null&&!opened&&!opening)startOpen();
-        if(opened){ui.removeCallbacks(standbyAfc);ui.postDelayed(standbyAfc,900);}}
-    @Override protected void onPause(){active=false;ui.removeCallbacks(tick);ui.removeCallbacks(standbyAfc);super.onPause();}
+        if(opened){}}
+    @Override protected void onPause(){active=false;ui.removeCallbacks(tick);super.onPause();}
     @Override protected void onDestroy(){
-        destroyed=true;ui.removeCallbacks(tick);ui.removeCallbacks(standbyAfc);PoseDirectorOverlay.closeIfVisible();
+        destroyed=true;ui.removeCallbacks(tick);PoseDirectorOverlay.closeIfVisible();
         if(!closed){work.post(new Runnable(){public void run(){releaseEverything();thread.quit();}});}
         else if(thread!=null)thread.quit();
         super.onDestroy();

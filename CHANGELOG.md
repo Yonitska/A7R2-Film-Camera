@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.9.0-beta.5-a7r2.57 — 录像 AFC-only、照片半按对焦、录像停止状态机（A7R2 本地测试版）
+
+- **录像只使用相机自己的 AFC**：删除 `standbyAfc`、S1 半按 `autoFocus`、AF 点确认/录制开始的
+  `autoFocus` 调用；录制中方向键仍移动灵活对焦点，由 movie engine 的 AF-C 重新对焦。
+  退出录像时仍取消遗留请求。
+- **照片半按对焦**：真 LUT 在 auto-preview READY 后启动一次 `autoFocus(null)`，S1 松开取消
+  （`photo_focus_start`/`focus_canceled origin=half_release`）；配方模式继续使用原有的
+  `recipeFocus`。录像路径不再触发任何 `Camera.autoFocus`。
+- **录像停止状态机**：
+  - 若在 `start()` 与 `onStarted()` 之间按停止，记录 `stopAfterStart`，收到
+    `onStarted` 后立即执行停止（`video_stop_after_start`），不再被 `recording=false` 忽略；
+  - 停止后 6 秒未收到 `onStopped`/`onCompleted` 时记录 `video_stop_watchdog` 并重试一次；
+    再过 6 秒仍卡住则释放录像接口（`video_stop_timeout`/`video_stop_forced`），
+    避免相机停在“正在保存”；
+  - `onStopped`/`onCompleted`/`OnError` 会使停止看门狗失效，不会误停下一段录像。
+- 版本 `0.9.0-beta.5-a7r2.57` / code 153。本地维护者构建 APK 6,651,491 B，
+  SHA-256 `ec5d2ac7154fdca960a6cac8dc35505decd577f5937217342e7bc83230de1fb3`。
+  本版为本地测试签名，不对外分发。
+  真机验证：真 LUT 半按对焦/连拍；录像待机与录制中的 AFC（不按半按）；配方照片/录像；
+  以及录制开始瞬间按停止、正常停止两条路径。
+
 ## 0.9.0-beta.5-a7r2.56 — 移除人脸检测厂商调用，录像 AF 改为不随 S1 取消（A7R2 本地测试版）
 
 - 配方模式在 a7r2.45（人脸检测加入前）可正常写入；a7r2.50 起所有失败的配方

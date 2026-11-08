@@ -165,6 +165,7 @@ github.com/voxivoid/recipe-lab · 开放配方数据	github.com/voxivoid/recipe-
 借鉴  M-Film（佳能）	借鑑  M-Film（佳能）	Inspired by  M-Film (Canon)	参考  M-Film（キヤノン）	참고  M-Film (Canon)
 借鉴  拍摄导演台 ShotDirector	借鑑  拍攝導演臺 ShotDirector	Inspired by  ShotDirector	参考  ShotDirector	참고  ShotDirector
 借鉴  胶片工坊 Film Studio	借鑑  膠片工坊 Film Studio	Inspired by  Film Studio	参考  Film Studio	참고  Film Studio
+停止超时 · 已释放录像接口	停止超時 · 已釋放錄影介面	Stop timeout · Video interface released	停止タイムアウト · 動画インターフェースを解放	중지 시간 초과 · 동영상 인터페이스 해제됨
 先选胶卷 · RAW 冲洗 + 完整 3D LUT	先選膠捲 · RAW 沖洗 + 完整 3D LUT	Pick a film first · RAW develop + full 3D LUT	先にフィルムを選択 · RAW現像 + 完全3D LUT	필름 선택 · RAW 현상 + 전체 3D LUT
 光位  	光位  	Light  	光の位置  	조명 위치  
 全局取景设置	全域性取景設定	Finder Settings	ファインダー設定	파인더 설정
@@ -356,6 +357,7 @@ github.com/voxivoid/recipe-lab · 开放配方数据	github.com/voxivoid/recipe-
 录像对焦点	錄影對焦點	Video AF Point	動画AFポイント	동영상 AF 포인트
 录像待机	錄影待機	Video standby	動画スタンバイ	동영상 대기
 录像待机自动对焦	錄影待機自動對焦	Standby Autofocus	待機オートフォーカス	대기 자동 초점
+录像接口已释放	錄影介面已釋放	Video interface released	動画インターフェースを解放	동영상 인터페이스 해제됨
 录像接口已释放，正在打开拍照	錄影介面已釋放，正在開啟拍照	Video released; opening photo mode	動画を解放しました。写真モードを開いています	동영상 해제됨. 사진 모드 여는 중
 录像曝光与白平衡	錄影曝光與白平衡	Video Exposure & WB	動画露出とWB	동영상 노출 및 WB
 录像格式	錄影格式	Video format	動画形式	동영상 형식

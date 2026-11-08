@@ -1647,6 +1647,31 @@ true LUT two shots, movie standby/record focus, return to LUT, recipe two
 shots. Attach `camera_focus_state`, `face_detection_skipped`, `video_focus_*`,
 `recipe_take_picture`, and `recipe_store_scan_*`.
 
+### a7r2.57 Movie AF-C only, photo half-press AF, stop state machine
+
+a7r2.56 made both photo modes and recipe video stable. The remaining device
+report was: true-LUT movie recording could not be stopped, movie AF-C was
+missing, and the desired split is AF-C for video / half-press for photos.
+
+- **Video AF.** All `Camera.autoFocus` calls were removed from
+  `VideoActivity` (standby loop, S1, AF-point confirm, record start). Movie
+  focus is now Sony's own AF-C; the arrow keys still move the flexible-spot
+  point and AF-C refocuses there. The only remaining call is the cancel that
+  runs when the movie session is released.
+- **Photo focus.** True-LUT photos start one `autoFocus(null)` after the
+  auto-preview gate is READY; S1 release cancels it. Recipe photos keep their
+  existing `recipeFocus` path. The video path never calls `autoFocus`.
+- **Stop state machine.** A stop pressed between `start()` and `onStarted()` is
+  remembered (`stopAfterStart`) and applied as soon as the recorder reports
+  started. After a normal stop, a 6 s watchdog retries once if
+  `onStopped`/`onCompleted` is missing, and a second 6 s timeout releases the
+  recorder (`video_stop_timeout`/`video_stop_forced`) so the movie process
+  cannot remain in "saving" forever. `onStopped`, `onCompleted`, and `OnError`
+  invalidate the watchdog.
+- **Artifacts.** Maintainer build `dist/SonyLutTest.apk`, 6,651,491 B,
+  SHA-256 `ec5d2ac7154fdca960a6cac8dc35505decd577f5937217342e7bc83230de1fb3`,
+  version `0.9.0-beta.5-a7r2.57` / code 153.
+
 ## Main risks
 
 - Sony `CameraSequence`/`DefaultDevelopFilter` and the 42m map are private

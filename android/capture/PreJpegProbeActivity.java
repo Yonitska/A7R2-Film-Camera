@@ -1306,6 +1306,9 @@ public class PreJpegProbeActivity extends Activity implements SurfaceHolder.Call
                 // direct shutter is ready. UI thread: never block the gate.
                 if(gate.state()==PreJpegGate.State.READY)ui.post(new Runnable(){public void run(){
                     ensureManualCaptureGuard("auto_preview_ready");
+                    // Photo focus is a half-press action. Video never calls
+                    // this; it relies on the movie engine's AF-C.
+                    startPhotoFocus("auto_preview_ready");
                 }});
             }
             public void failed(Exception error){failure("automatic_preview",error);}
@@ -2298,6 +2301,37 @@ public class PreJpegProbeActivity extends Activity implements SurfaceHolder.Call
         try{target.cancelAutoFocus();event("focus_canceled","origin="+origin);}
         catch(Throwable e){event("focus_cancel_error","origin="+origin+" "+cause(e));}
     }
+    /** True-LUT photo focus is a half-press action. Recipe mode has its own
+     * recipeFocus path; video uses the movie engine's AF-C and never calls
+     * this. Runs on the serialized control thread. */
+    private void startPhotoFocus(final String origin){
+        if(recipeMode())return;
+        final Camera target=camera;
+        if(target==null)return;
+        final Handler handler=controlHandler;
+        Runnable call=new Runnable(){public void run(){
+            if(closed||destroyed||camera!=target)return;
+            long start=SystemClock.elapsedRealtime();
+            try{
+                target.cancelAutoFocus();
+                target.autoFocus(null);
+                event("photo_focus_start",origin+" ms="+(SystemClock.elapsedRealtime()-start));
+            }catch(Throwable e){event("photo_focus_error",origin+" "+cause(e));}
+        }};
+        if(handler!=null)handler.post(call);else call.run();
+    }
+    private void cancelPhotoFocus(final String origin){
+        if(recipeMode())return;
+        final Camera target=camera;
+        if(target==null)return;
+        final Handler handler=controlHandler;
+        Runnable call=new Runnable(){public void run(){
+            if(camera!=target)return;
+            try{target.cancelAutoFocus();event("focus_canceled","origin="+origin);}
+            catch(Throwable e){event("focus_cancel_error","origin="+origin+" "+cause(e));}
+        }};
+        if(handler!=null)handler.post(call);else call.run();
+    }
     /** Sony's preview display mode can unlock AE. Before the camera is allowed
      * to meter the shot, restore the plain M state and the exact dial values.
      * This runs on the half-press, which precedes the full press. */
@@ -2561,6 +2595,9 @@ public class PreJpegProbeActivity extends Activity implements SurfaceHolder.Call
             }else{
                 event("auto_preview_key","key="+key+" scan="+scan+" action="+e.getAction()+" state="+autoPreview.state());
                 boolean half=key==516||scan==516||key==KeyEvent.KEYCODE_FOCUS;
+                boolean anyHalfUp=e.getAction()==KeyEvent.ACTION_UP
+                        &&(scan==516||key==516||scan==517||key==517||key==KeyEvent.KEYCODE_FOCUS);
+                if(anyHalfUp)cancelPhotoFocus("half_release");
                 boolean releaseHalf=key==772||scan==772||(half&&e.getAction()==KeyEvent.ACTION_UP);
                 if(releaseHalf){autoPreview.release();return true;}
                 if(e.getAction()==KeyEvent.ACTION_DOWN&&e.getRepeatCount()==0&&(half||key==518||scan==518||key==KeyEvent.KEYCODE_CAMERA)){
