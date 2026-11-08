@@ -221,4 +221,5 @@ attribution.
 
 [中文说明](README.zh-CN.md) · [A7R II port notes](docs/A7R2_PORT.md) ·
 [User guide](docs/USER_GUIDE.md) · [Build](docs/BUILD.md) ·
+[Publishing policy](docs/PUBLISHING.md) ·
 [Project board](https://github.com/users/Yonitska/projects/1)
